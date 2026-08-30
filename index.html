@@ -982,18 +982,62 @@
 
         async function approveException(id, btn) {
             try {
+                const card = btn.closest('.bg-ocean-bg');
+                card.style.pointerEvents = 'none';
                 await apiPost(`/api/exceptions/${id}/approve`, { note: 'Approved via dashboard' });
-                btn.closest('.bg-ocean-bg').style.opacity = '0.4';
+                
+                // Animate card slide up and fade out
+                gsap.to(card, {
+                    opacity: 0,
+                    y: -20,
+                    scale: 0.95,
+                    duration: 0.3,
+                    onComplete: async () => {
+                        card.remove();
+                        // Refresh dashboard counters and lists
+                        await Promise.all([
+                            loadKPIs(),
+                            loadExceptions(),
+                            loadAuditLog(),
+                            loadHealthScore()
+                        ]);
+                    }
+                });
                 addLocalAuditEntry(`Exception ${id.substring(0, 8)} APPROVED`);
-            } catch(e) { alert('Approval failed — controller role required.'); }
+            } catch(e) { 
+                alert('Approval failed — controller role required.'); 
+                btn.closest('.bg-ocean-bg').style.pointerEvents = 'auto';
+            }
         }
 
         async function rejectException(id, btn) {
             try {
+                const card = btn.closest('.bg-ocean-bg');
+                card.style.pointerEvents = 'none';
                 await apiPost(`/api/exceptions/${id}/reject`, { note: 'Rejected via dashboard' });
-                btn.closest('.bg-ocean-bg').style.opacity = '0.4';
+                
+                // Animate card slide up and fade out
+                gsap.to(card, {
+                    opacity: 0,
+                    y: -20,
+                    scale: 0.95,
+                    duration: 0.3,
+                    onComplete: async () => {
+                        card.remove();
+                        // Refresh dashboard counters and lists
+                        await Promise.all([
+                            loadKPIs(),
+                            loadExceptions(),
+                            loadAuditLog(),
+                            loadHealthScore()
+                        ]);
+                    }
+                });
                 addLocalAuditEntry(`Exception ${id.substring(0, 8)} REJECTED`);
-            } catch(e) { alert('Rejection failed — controller role required.'); }
+            } catch(e) { 
+                alert('Rejection failed — controller role required.'); 
+                btn.closest('.bg-ocean-bg').style.pointerEvents = 'auto';
+            }
         }
 
         async function loadAnomalies() {
