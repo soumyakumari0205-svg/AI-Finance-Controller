@@ -1,41 +1,49 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
 .venv/
 venv/
-env/
-*.egg-info/
-dist/
-build/
+ENV/
 
-# Environment
+# Database / SQLite
+*.db
+*.sqlite3
+*.sqlite
+finance.db
+
+# Archives
+*.zip
+*.tar.gz
+*.tar
+*.rar
+
+# Environment variables
 .env
-*.env.local
+backend/.env
 
-# Secrets — NEVER commit service keys
-*service_key*
-*service-role*
-
-# Node
-node_modules/
-
-# IDE
+# IDE & OS
 .vscode/
 .idea/
-*.swp
-
-# OS
 .DS_Store
 Thumbs.db
-
-# Postgres data
-pgdata/
-
-# Test artifacts
-.pytest_cache/
-htmlcov/
-.coverage
-
-# Docker
-*.log
