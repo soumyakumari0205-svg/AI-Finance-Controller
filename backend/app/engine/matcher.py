@@ -400,11 +400,27 @@ async def run_reconciliation(db: AsyncSession) -> dict:
     if bank_srcs and erp_srcs:
         all_results.extend(_match_pairs(bank_srcs, erp_srcs, window, fuzzy_thresh, tie_thresh))
 
-    # Bank → Gateway matching (for unmatched bank records after ERP pass)
-    matched_bank_ids = {r.source_a.id for r in all_results if r.status == MatchStatus.matched}
-    unmatched_banks = [s for s in bank_srcs if s.id not in matched_bank_ids]
+    # Bank → Gateway matching — only for bank records that got NO usable candidate
+    # (i.e. "exception") in the ERP pass. Records that already reached "matched" or
+    # "review" status against an ERP invoice have a real candidate and must NOT be
+    # re-processed here: doing so previously created a second persisted
+    # ReconciliationMatch row for the same bank record, and if the ERP pass had
+    # produced an "exception" (which writes an open Exception_ row) while the gateway
+    # pass produced a real match, the same bank transaction ended up simultaneously
+    # "matched" and flagged as an open exception. Bank records with a real ERP
+    # candidate are excluded here; only true exceptions are retried against gateway.
+    has_erp_candidate_ids = {
+        r.source_a.id for r in all_results if r.status in (MatchStatus.matched, MatchStatus.review)
+    }
+    unmatched_banks = [s for s in bank_srcs if s.id not in has_erp_candidate_ids]
     if unmatched_banks and gw_srcs:
-        all_results.extend(_match_pairs(unmatched_banks, gw_srcs, window, fuzzy_thresh, tie_thresh))
+        gateway_results = _match_pairs(unmatched_banks, gw_srcs, window, fuzzy_thresh, tie_thresh)
+        # Drop the stale ERP-pass "exception" placeholder for any bank record that
+        # was just retried against gateway — otherwise that bank record would end up
+        # with two persisted rows: the old ERP exception AND the new gateway result.
+        retried_ids = {s.id for s in unmatched_banks}
+        all_results = [r for r in all_results if r.source_a.id not in retried_ids]
+        all_results.extend(gateway_results)
 
     # Persist all results
     matched_count = 0
