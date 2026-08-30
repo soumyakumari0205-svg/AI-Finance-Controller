@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Finance Controller | Autonomous Financial Verification OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/ogl"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ocean: {
+                            bg: '#050B14',
+                            card: '#0A1424',
+                            cardBorder: '#142642',
+                            accent: '#00F0FF',
+                            accentGlow: 'rgba(0, 240, 255, 0.25)',
+                            gold: '#D2A76B',
+                            text: '#F0F6FC',
+                            textMuted: '#6E8294',
+                            green: '#00E676',
+                            amber: '#FFAB00',
+                            red: '#FF1744'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        body { background-color: #050B14; color: #F0F6FC; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #050B14; }
+        ::-webkit-scrollbar-thumb { background: #142642; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00F0FF; }
+        .ocean-glow { box-shadow: 0 0 30px -5px rgba(0, 240, 255, 0.25); }
+        .gold-glow { box-shadow: 0 0 25px -5px rgba(210, 167, 107, 0.25); }
+        .card-3d { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card-3d:hover { transform: translateY(-4px); box-shadow: 0 12px 32px -10px rgba(0,0,0,0.8), 0 0 25px -5px rgba(0, 240, 255, 0.2); }
+        @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(1000%); } }
+        .animate-scan { animation: scan 4s linear infinite; }
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } }
+        .animate-pulse-slow { animation: pulse-slow 5s ease-in-out infinite; }
+        #targetCursor { pointer-events: none; position: fixed; width: 24px; height: 24px; border: 2px solid #00F0FF; border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.15s, height 0.15s, border-color 0.15s; z-index: 9999; box-shadow: 0 0 10px rgba(0,240,255,0.5); }
+        .elastic-mesh-container { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; overflow: hidden; pointer-events: none; }
+        .elastic-mesh-container canvas { display: block; width: 100%; height: 100%; pointer-events: auto; }
+        .warp-text-container { position: relative; display: inline-block; width: 100%; height: auto; vertical-align: middle; }
+        .warp-text-container canvas { display: block; width: 100%; height: auto; }
+        .bento-section { position: relative; user-select: none; }
+        .card-grid { display: grid; gap: 1em; width: 100%; grid-template-columns: repeat(1, 1fr); }
+        @media (min-width: 600px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .card-grid { grid-template-columns: repeat(4, 1fr); } .magic-bento-card:nth-child(1) { grid-column: span 2; grid-row: span 2; } .magic-bento-card:nth-child(4) { grid-column: span 2; } }
+        .magic-bento-card { display: flex; flex-direction: column; justify-content: space-between; position: relative; min-height: auto; width: 100%; padding: 1.25em; border-radius: 20px; border: 1px solid #142642; background: #0A1424; overflow: hidden; transition: box-shadow 0.3s ease, border-color 0.3s ease; --glow-x: 50%; --glow-y: 50%; --glow-intensity: 0; --glow-radius: 300px; --glow-color: 0, 240, 255; transform-style: preserve-3d; will-change: transform; }
+        .magic-bento-card--border-glow::after { content: ''; position: absolute; inset: 0; padding: 1.5px; background: radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y), rgba(var(--glow-color), calc(var(--glow-intensity) * 0.8)) 0%, rgba(var(--glow-color), calc(var(--glow-intensity) * 0.3)) 30%, transparent 60%); border-radius: inherit; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; pointer-events: none; opacity: 1; transition: opacity 0.3s ease; z-index: 2; }
+        .magic-bento-card:hover { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 25px rgba(0, 240, 255, 0.15); border-color: rgba(0, 240, 255, 0.4); }
+        .magic-bento-card__header, .magic-bento-card__content { display: flex; position: relative; z-index: 3; }
+        .magic-bento-card__header { justify-content: space-between; align-items: center; }
+        .magic-bento-card__content { flex-direction: column; }
+        .global-spotlight { mix-blend-mode: screen; will-change: transform, opacity; z-index: 200 !important; pointer-events: none; }
+        .forecast-bar { transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* ── Login overlay ── */
+        #loginOverlay { position: fixed; inset: 0; z-index: 200; background: #050B14; display: flex; align-items: center; justify-content: center; }
+        #loginOverlay.hidden { display: none; }
+    </style>
+</head>
+<body class="antialiased selection:bg-ocean-accent selection:text-ocean-bg">
+
+    <div id="targetCursor" class="hidden md:block"></div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         LOGIN OVERLAY — Supabase Auth (email + password)
+         Shown before any dashboard content. Hidden on successful auth.
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div id="loginOverlay">
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-8 w-full max-w-md space-y-6 shadow-2xl ocean-glow">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center">
+                    <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
+                </div>
+                <div>
+                    <div class="font-bold text-lg text-ocean-text">Finance<span class="text-ocean-accent">OS</span></div>
+                    <div class="text-xs text-ocean-textMuted">AI Finance Controller</div>
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <h2 class="text-xl font-extrabold text-ocean-text">Sign In</h2>
+                <p class="text-xs text-ocean-textMuted">Authenticate to access the reconciliation dashboard</p>
+            </div>
+
+            <div id="loginError" class="hidden p-3 bg-ocean-red/10 border border-ocean-red/30 rounded-lg text-xs text-ocean-red"></div>
+
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Email</label>
+                    <input type="email" id="loginEmail" placeholder="controller@yourcompany.com"
+                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-4 py-3 text-sm text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••"
+                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-4 py-3 text-sm text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none"
+                        onkeydown="if(event.key==='Enter') attemptLogin()">
+                </div>
+            </div>
+
+            <button onclick="attemptLogin()" id="loginBtn"
+                class="w-full bg-ocean-accent text-ocean-bg py-3 rounded-xl font-bold text-sm hover:bg-cyan-300 transition-all ocean-glow">
+                Sign In to Dashboard
+            </button>
+
+            <div class="relative flex items-center gap-3">
+                <div class="flex-1 h-px bg-ocean-cardBorder"></div>
+                <span class="text-[10px] text-ocean-textMuted uppercase tracking-widest">or</span>
+                <div class="flex-1 h-px bg-ocean-cardBorder"></div>
+            </div>
+
+            <button onclick="enterDevMode()"
+                class="w-full bg-ocean-card border border-ocean-accent/40 text-ocean-accent py-3 rounded-xl font-bold text-sm hover:bg-ocean-accent/10 transition-all flex items-center justify-center gap-2">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+                Continue in Dev Mode (No Backend Required)
+            </button>
+            <p class="text-center text-[10px] text-ocean-textMuted">Dev mode: full UI loads with mock token. Connect the backend later for real data.</p>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="fixed inset-0 z-[100] bg-ocean-bg flex flex-col items-center justify-center space-y-6 transition-opacity duration-700">
+        <div class="relative w-24 h-24 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border-2 border-ocean-accent/20 border-t-ocean-accent animate-spin"></div>
+            <div class="w-12 h-12 rounded-lg bg-ocean-accent/10 border border-ocean-accent flex items-center justify-center">
+                <i data-lucide="cpu" class="w-6 h-6 text-ocean-accent"></i>
+            </div>
+        </div>
+        <div class="text-center space-y-2">
+            <h2 class="text-xl font-bold tracking-widest text-ocean-text uppercase">AI Finance Controller</h2>
+            <p class="text-xs font-mono text-ocean-accent animate-pulse">INITIALIZING FINANCIAL OPERATING SYSTEM...</p>
+        </div>
+    </div>
+
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-ocean-bg/85 backdrop-blur-md border-b border-ocean-cardBorder">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center">
+                    <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
+                </div>
+                <span class="font-bold text-lg tracking-wider uppercase text-ocean-text">Finance<span class="text-ocean-accent">OS</span></span>
+            </div>
+            <div class="hidden lg:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted">
+                <a href="#features" class="hover:text-ocean-accent transition-colors">OS Capabilities</a>
+                <a href="#brief" class="hover:text-ocean-accent transition-colors">Daily Brief</a>
+                <a href="#demo" class="hover:text-ocean-accent transition-colors">Operations Center</a>
+                <a href="#exceptions" class="hover:text-ocean-accent transition-colors">Exceptions</a>
+                <a href="#radar" class="hover:text-ocean-accent transition-colors">Risk Radar</a>
+                <a href="#forecasting" class="hover:text-ocean-accent transition-colors">Forecast & What-If</a>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="bg-ocean-card border border-ocean-cardBorder p-1 rounded-lg flex text-xs">
+                    <button id="modeOpBtn" onclick="setMode('operational')" class="px-2.5 py-1 rounded font-bold bg-ocean-accent text-ocean-bg">Ops</button>
+                    <button id="modeExecBtn" onclick="setMode('executive')" class="px-2.5 py-1 rounded text-ocean-textMuted hover:text-ocean-text">Exec</button>
+                </div>
+                <button onclick="openGlobalSearch()" class="hidden sm:flex items-center space-x-2 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted px-3 py-1.5 rounded-lg text-xs hover:border-ocean-accent/50">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-ocean-accent"></i>
+                    <span>Search</span>
+                    <kbd class="bg-ocean-bg border border-ocean-cardBorder px-1.5 py-0.5 rounded text-[10px] text-ocean-gold">⌘K</kbd>
+                </button>
+                <div class="relative">
+                    <button onclick="toggleNotificationPanel()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text relative">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                        <span id="notifBadge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ocean-red rounded-full"></span>
+                    </button>
+                    <div id="notifPanel" class="hidden absolute right-0 mt-3 w-80 bg-ocean-card border border-ocean-cardBorder rounded-xl p-4 shadow-2xl z-50 text-xs space-y-3">
+                        <div class="flex justify-between items-center border-b border-ocean-cardBorder pb-2">
+                            <span class="font-bold text-ocean-text">Notifications</span>
+                            <span id="notifCountLabel" class="text-[10px] text-ocean-accent font-mono">Live</span>
+                        </div>
+                        <div class="space-y-2 max-h-60 overflow-y-auto" id="notifList">
+                            <div class="p-2 bg-ocean-bg rounded border border-ocean-accent/30 text-xs text-ocean-textMuted">Loading from API…</div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="openShortcutsModal()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text" title="Keyboard Shortcuts (?)">
+                    <i data-lucide="keyboard" class="w-4 h-4"></i>
+                </button>
+                <button onclick="signOut()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-red text-xs flex items-center gap-1" title="Sign out">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative min-h-screen pt-32 pb-16 px-6 flex items-center justify-center overflow-hidden">
+        <div id="elasticMeshContainer" class="elastic-mesh-container opacity-40"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(#142642_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none"></div>
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-ocean-accent/10 rounded-full blur-[140px] pointer-events-none animate-pulse-slow"></div>
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10 pointer-events-none">
+            <div class="lg:col-span-7 space-y-8 pointer-events-auto">
+                <div class="inline-flex items-center space-x-2 bg-ocean-card border border-ocean-accent/40 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest text-ocean-accent">
+                    <span class="w-2 h-2 rounded-full bg-ocean-accent animate-ping"></span>
+                    <span>Autonomous Financial Verification OS</span>
+                </div>
+                <div id="heroHeadlineWarp" class="warp-text-container text-5xl lg:text-7xl font-extrabold tracking-tight text-ocean-text leading-[1.1]">AI Finance Controller</div>
+                <p class="text-xl lg:text-2xl font-light text-ocean-accent/90 tracking-wide">Run the books. Control the cash. Verify everything.</p>
+                <p class="text-base lg:text-lg text-ocean-textMuted max-w-xl leading-relaxed">An enterprise AI finance operating system that reconciles multi-source ledgers, measures verification accuracy, surfaces priority exceptions, and models real-time cash positions — powered by a real matching engine, not Math.random().</p>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-2">
+                    <a href="#demo" class="bg-ocean-accent text-ocean-bg px-8 py-4 rounded-xl font-bold text-base hover:bg-cyan-300 transition-all ocean-glow text-center flex items-center justify-center space-x-2">
+                        <span>Launch Operations Center</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </a>
+                    <button onclick="openOnboardingTour()" class="bg-ocean-card border border-ocean-cardBorder text-ocean-text px-6 py-4 rounded-xl font-semibold text-base hover:border-ocean-accent/50 transition-all text-center flex items-center justify-center space-x-2">
+                        <i data-lucide="compass" class="w-5 h-5 text-ocean-accent"></i>
+                        <span>Guided Product Tour</span>
+                    </button>
+                </div>
+            </div>
+            <div class="lg:col-span-5 relative pointer-events-auto">
+                <div class="bg-ocean-card/90 border border-ocean-cardBorder rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden shadow-2xl">
+                    <div class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-ocean-accent to-transparent animate-scan opacity-80"></div>
+                    <div class="text-xs uppercase tracking-widest text-ocean-accent font-mono mb-4 flex justify-between items-center">
+                        <span>Verification Engine Stream</span>
+                        <span class="text-ocean-green flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-ocean-green animate-pulse"></span> Stream Active</span>
+                    </div>
+                    <div class="space-y-3 relative">
+                        <div class="p-3 bg-ocean-bg border border-ocean-green/40 rounded-lg flex justify-between items-center">
+                            <div><div class="text-[11px] text-ocean-textMuted">Bank Deposit • TXN-9821</div><div class="text-xs font-semibold text-ocean-text">Stripe Settlement</div></div>
+                            <div class="text-right"><div class="text-xs font-mono font-bold text-ocean-text">$42,850.00</div><span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-ocean-green/20 text-ocean-green border border-ocean-green/30">🟢 Exact Match</span></div>
+                        </div>
+                        <div class="py-1 flex items-center justify-center"><div class="w-10 h-10 rounded-full bg-ocean-accent/10 border border-ocean-accent flex items-center justify-center relative animate-pulse"><i data-lucide="sparkles" class="w-5 h-5 text-ocean-accent"></i></div></div>
+                        <div class="p-3 bg-ocean-bg border border-ocean-amber/40 rounded-lg flex justify-between items-center">
+                            <div><div class="text-[11px] text-ocean-textMuted">ERP Invoice • INV-8842</div><div class="text-xs font-semibold text-ocean-text">Acme Corp Wire</div></div>
+                            <div class="text-right"><div class="text-xs font-mono font-bold text-ocean-text">$12,400.00</div><span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-ocean-amber/20 text-ocean-amber border border-ocean-amber/30">🟡 Fuzzy Review</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-20 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section">
+        <div class="mb-12 text-center space-y-3">
+            <div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Real Backend Architecture</div>
+            <h2 class="text-3xl lg:text-4xl font-extrabold text-ocean-text">Autonomous Controller Engine Capabilities</h2>
+            <p class="text-sm text-ocean-textMuted max-w-2xl mx-auto">Every confidence score traces to actual field comparisons via rapidfuzz. No Math.random() anywhere in this system.</p>
+        </div>
+        <div class="card-grid bento-grid-target" id="magicBentoGrid">
+            <div class="magic-bento-card magic-bento-card--border-glow"><div class="magic-bento-card__header"><span class="px-2.5 py-1 rounded-full bg-ocean-accent/10 border border-ocean-accent/30 text-ocean-accent text-xs font-mono font-bold">Engine</span><i data-lucide="bar-chart-3" class="w-6 h-6 text-ocean-accent"></i></div><div class="magic-bento-card__content mt-8 space-y-2"><h3 class="text-xl font-bold text-ocean-text">Fuzzy Match Engine</h3><p class="text-xs text-ocean-textMuted leading-relaxed">Exact pass (±0.01 amount, ±3 days, ref overlap) scores 95–100%. Fuzzy pass uses rapidfuzz token_set_ratio weighted with amount/date proximity for 70–94% confidence.</p></div></div>
+            <div class="magic-bento-card magic-bento-card--border-glow"><div class="magic-bento-card__header"><span class="px-2.5 py-1 rounded-full bg-ocean-gold/10 border border-ocean-gold/30 text-ocean-gold text-xs font-mono font-bold">Score</span><i data-lucide="activity" class="w-6 h-6 text-ocean-gold"></i></div><div class="magic-bento-card__content mt-8 space-y-2"><h3 class="text-lg font-bold text-ocean-text">Real Health Score</h3><p class="text-xs text-ocean-textMuted leading-relaxed">Weighted formula: match_rate×0.45 + exception_score×0.25 + age_score×0.15 + quality_score×0.15. Stored per run for trend history.</p></div></div>
+            <div class="magic-bento-card magic-bento-card--border-glow"><div class="magic-bento-card__header"><span class="px-2.5 py-1 rounded-full bg-ocean-green/10 border border-ocean-green/30 text-ocean-green text-xs font-mono font-bold">Audit</span><i data-lucide="shield-check" class="w-6 h-6 text-ocean-green"></i></div><div class="magic-bento-card__content mt-8 space-y-2"><h3 class="text-lg font-bold text-ocean-text">Immutable Audit Log</h3><p class="text-xs text-ocean-textMuted leading-relaxed">Every match, exception, and anomaly writes atomically to audit_log. DB-level REVOKE prevents UPDATE/DELETE. RLS policies enforce it.</p></div></div>
+            <div class="magic-bento-card magic-bento-card--border-glow"><div class="magic-bento-card__header"><span class="px-2.5 py-1 rounded-full bg-ocean-accent/10 border border-ocean-accent/30 text-ocean-accent text-xs font-mono font-bold">Auth</span><i data-lucide="key" class="w-6 h-6 text-ocean-accent"></i></div><div class="magic-bento-card__content mt-8 space-y-2"><h3 class="text-xl font-bold text-ocean-text">Supabase JWT Auth</h3><p class="text-xs text-ocean-textMuted leading-relaxed">Every API route verifies the Supabase JWT. Controller role required to approve/reject exceptions. Viewer role for read-only access. No service key in the browser.</p></div></div>
+            <div class="magic-bento-card magic-bento-card--border-glow"><div class="magic-bento-card__header"><span class="px-2.5 py-1 rounded-full bg-ocean-amber/10 border border-ocean-amber/30 text-ocean-amber text-xs font-mono font-bold">Anomaly</span><i data-lucide="zap" class="w-6 h-6 text-ocean-amber"></i></div><div class="magic-bento-card__content mt-8 space-y-2"><h3 class="text-lg font-bold text-ocean-text">Real Anomaly Detection</h3><p class="text-xs text-ocean-textMuted leading-relaxed">Duplicate payout (same vendor/amount/gateway/24h), fee variance drift vs trailing 90-day avg, and off-schedule billing detection.</p></div></div>
+            <div class="magic-bento-card magic-bento-card--border-glow"><div class="magic-bento-card__header"><span class="px-2.5 py-1 rounded-full bg-ocean-red/10 border border-ocean-red/30 text-ocean-red text-xs font-mono font-bold">Forecast</span><i data-lucide="trending-up" class="w-6 h-6 text-ocean-red"></i></div><div class="magic-bento-card__content mt-8 space-y-2"><h3 class="text-lg font-bold text-ocean-text">Server-Side Forecasting</h3><p class="text-xs text-ocean-textMuted leading-relaxed">What-If sliders call POST /api/forecast/what-if and recompute from real DB data server-side. Bar heights reflect actual projected balances.</p></div></div>
+        </div>
+    </section>
+
+    <section id="brief" class="py-16 border-t border-ocean-cardBorder bg-ocean-card/30 px-6">
+        <div class="max-w-7xl mx-auto space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div class="text-xs font-bold text-ocean-accent tracking-[0.2em] uppercase">Executive Intelligence</div>
+                    <h2 class="text-2xl lg:text-3xl font-extrabold text-ocean-text mt-1">Today's AI Finance Brief & Health Score</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="loadHealthScore()" class="p-2 bg-ocean-bg border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-accent text-xs flex items-center gap-1.5">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Recalculate Score</span>
+                    </button>
+                    <div id="healthRefreshedLabel" class="text-xs font-mono text-ocean-textMuted">Loading…</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div class="lg:col-span-4 bg-ocean-card border border-ocean-cardBorder p-6 rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
+                    <div class="text-xs font-bold uppercase tracking-wider text-ocean-textMuted">System Finance Health</div>
+                    <div class="relative w-40 h-40 flex items-center justify-center">
+                        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-ocean-cardBorder" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="healthCircle" class="text-ocean-accent transition-all duration-700" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="absolute flex flex-col items-center">
+                            <span id="healthScoreValue" class="text-4xl font-extrabold text-ocean-text">–</span>
+                            <span class="text-[10px] text-ocean-textMuted font-mono">/ 100</span>
+                        </div>
+                    </div>
+                    <div id="healthBadge" class="px-3 py-1 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted font-bold text-xs rounded-full">LOADING…</div>
+                </div>
+                <div class="lg:col-span-8 bg-ocean-card border border-ocean-cardBorder p-6 rounded-2xl space-y-6">
+                    <p class="text-sm lg:text-base text-ocean-text leading-relaxed">
+                        "Reconciliation completed with a <span id="briefMatchRate" class="text-ocean-accent font-bold">–%</span> match rate.
+                        <span id="briefExceptionCount" class="text-ocean-red font-bold">–</span> exceptions currently require attention.
+                        Health score computed from match rate, exception count, exception age, and data quality."
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-3 bg-ocean-bg rounded-lg border border-ocean-green/30 space-y-1">
+                            <div class="font-bold text-ocean-green flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-4 h-4"></i> AUTO-RESOLVED</div>
+                            <p class="text-ocean-textMuted"><span id="briefAutoResolved" class="font-bold text-ocean-text">–</span> records matched at &gt;90% confidence.</p>
+                        </div>
+                        <div class="p-3 bg-ocean-bg rounded-lg border border-ocean-red/30 space-y-1">
+                            <div class="font-bold text-ocean-red flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i> OPEN EXCEPTIONS</div>
+                            <p class="text-ocean-textMuted"><span id="briefOpenExc" class="font-bold text-ocean-text">–</span> exceptions need controller review.</p>
+                        </div>
+                        <div class="p-3 bg-ocean-bg rounded-lg border border-ocean-amber/30 space-y-1">
+                            <div class="font-bold text-ocean-amber flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4"></i> EXPLAINABILITY</div>
+                            <p class="text-ocean-textMuted"><span id="briefExplain" class="font-bold text-ocean-text">–%</span> of matches have full decision trace.</p>
+                        </div>
+                        <div class="p-3 bg-ocean-bg rounded-lg border border-ocean-accent/30 space-y-1">
+                            <div class="font-bold text-ocean-accent flex items-center gap-1.5"><i data-lucide="lightbulb" class="w-4 h-4"></i> AI RECOMMENDATION</div>
+                            <p class="text-ocean-textMuted">Click "Run AI Reconciliation" to process all source records.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-10 border-b border-ocean-cardBorder bg-ocean-bg px-6">
+        <div class="max-w-7xl mx-auto space-y-4">
+            <div class="flex justify-between items-center text-xs font-mono">
+                <span class="text-ocean-accent font-bold uppercase tracking-widest flex items-center gap-2"><i data-lucide="history" class="w-4 h-4"></i> Time Travel Finance Controller</span>
+                <span id="timeTravelLabel" class="text-ocean-gold font-bold">State: TODAY</span>
+            </div>
+            <div class="bg-ocean-card border border-ocean-cardBorder p-4 rounded-xl space-y-2">
+                <input type="range" min="0" max="3" value="1" id="timeTravelSlider" oninput="handleTimeTravel(this.value)" class="w-full accent-ocean-accent cursor-pointer">
+                <div class="flex justify-between text-[11px] font-mono text-ocean-textMuted">
+                    <span>Past 30 Days</span><span class="font-bold text-ocean-text">Today</span><span>Next 7 Days</span><span>Next 30 Days</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="demo" class="py-16 px-6 max-w-7xl mx-auto scroll-mt-20">
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 ocean-glow relative">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-ocean-cardBorder">
+                <div>
+                    <div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Finance Operations Center</div>
+                    <div id="opsHeaderWarp" class="warp-text-container text-2xl lg:text-3xl font-extrabold text-ocean-text mt-1">Live Reconciliation Workspace</div>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="exportReconciliationData()" class="bg-ocean-bg border border-ocean-cardBorder text-ocean-text px-4 py-2 rounded-lg font-semibold text-xs hover:border-ocean-accent/50 transition-all flex items-center space-x-2">
+                        <i data-lucide="download" class="w-3.5 h-3.5 text-ocean-accent"></i><span>Export CSV</span>
+                    </button>
+                    <button id="runReconcileBtn" onclick="runReconciliation()" class="bg-ocean-accent text-ocean-bg px-5 py-2 rounded-lg font-bold text-xs hover:bg-cyan-300 transition-all flex items-center space-x-2">
+                        <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Run AI Reconciliation</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 my-8">
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Processed</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-text my-1" id="kpi-records">–</div><div class="text-[11px] text-ocean-green flex items-center gap-1">Source Records</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Match Rate</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-accent my-1" id="kpi-matchrate">–</div><div class="text-[11px] text-ocean-textMuted">Target: &gt;95%</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Auto-Resolved</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-green my-1" id="kpi-resolved">–</div><div class="text-[11px] text-ocean-green">High Confidence</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Exceptions</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-red my-1" id="kpi-exceptions">–</div><div class="text-[11px] text-ocean-amber">Action Needed</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl col-span-2 lg:col-span-1"><div class="text-xs text-ocean-textMuted font-medium uppercase">Explainability</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-gold my-1" id="kpi-explainability">–</div><div class="text-[11px] text-ocean-gold">Match Reasons</div></div>
+            </div>
+
+            <div id="liveProcessingPanel" class="hidden mb-6 p-4 bg-ocean-bg border border-ocean-accent/40 rounded-xl space-y-2 font-mono text-xs">
+                <div class="flex justify-between text-ocean-accent font-bold"><span>LIVE ENGINE RECONCILIATION STREAM</span><span id="procSpeed">Processing…</span></div>
+                <div id="procTerminal" class="h-20 overflow-y-auto text-ocean-textMuted space-y-1"><div>&gt; ANALYZING BATCH DATA STREAM...</div></div>
+            </div>
+
+            <div class="mb-6 p-4 bg-ocean-bg border border-ocean-cardBorder rounded-xl space-y-3">
+                <div class="text-xs font-bold text-ocean-text uppercase tracking-wider">AI Confidence Breakdown</div>
+                <div class="grid grid-cols-3 gap-3 text-xs">
+                    <button onclick="filterByConfidence('HIGH')" class="p-2 bg-ocean-card border border-ocean-green/30 rounded flex justify-between items-center hover:border-ocean-green"><span class="text-ocean-green">High (90-100%)</span><span class="font-bold text-ocean-text" id="highConfCount">–</span></button>
+                    <button onclick="filterByConfidence('MED')" class="p-2 bg-ocean-card border border-ocean-amber/30 rounded flex justify-between items-center hover:border-ocean-amber"><span class="text-ocean-amber">Medium (70-89%)</span><span class="font-bold text-ocean-text" id="medConfCount">–</span></button>
+                    <button onclick="filterByConfidence('LOW')" class="p-2 bg-ocean-card border border-ocean-red/30 rounded flex justify-between items-center hover:border-ocean-red"><span class="text-ocean-red">Low (&lt;70%)</span><span class="font-bold text-ocean-text" id="lowConfCount">–</span></button>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 class="text-base font-bold text-ocean-text flex items-center gap-2"><i data-lucide="database" class="w-4 h-4 text-ocean-accent"></i>Financial Records — Real Data from API</h3>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <input type="text" id="searchInput" onkeyup="filterRecords()" placeholder="Search records..." class="bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-1.5 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none w-44">
+                        <select id="sourceFilter" onchange="filterRecords()" class="bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-1.5 text-xs text-ocean-text focus:border-ocean-accent outline-none">
+                            <option value="ALL">All Sources</option>
+                            <option value="bank">Bank</option>
+                            <option value="erp">ERP</option>
+                            <option value="gateway">Gateway</option>
+                        </select>
+                        <select id="statusFilter" onchange="filterRecords()" class="bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-1.5 text-xs text-ocean-text focus:border-ocean-accent outline-none">
+                            <option value="ALL">All Statuses</option>
+                            <option value="matched">🟢 Matched</option>
+                            <option value="review">🟡 Review Needed</option>
+                            <option value="exception">🔴 Exception</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto border border-ocean-cardBorder rounded-xl max-h-[380px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-ocean-bg sticky top-0 z-10 text-xs font-semibold text-ocean-textMuted uppercase border-b border-ocean-cardBorder">
+                            <tr><th class="p-3">ID</th><th class="p-3">Date</th><th class="p-3">Source</th><th class="p-3">Description</th><th class="p-3">Amount</th><th class="p-3">Matched Record</th><th class="p-3">Status</th><th class="p-3">Confidence</th><th class="p-3 text-right">Action</th></tr>
+                        </thead>
+                        <tbody id="recordsTableBody" class="divide-y divide-ocean-cardBorder text-xs text-ocean-text">
+                            <tr><td colspan="9" class="p-6 text-center text-ocean-textMuted font-mono">Run reconciliation or wait for scheduler…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="detailPanel" class="fixed inset-y-0 right-0 w-full max-w-md bg-ocean-card border-l border-ocean-cardBorder z-50 transform translate-x-full transition-transform duration-300 ease-in-out p-6 overflow-y-auto shadow-2xl">
+        <div class="flex justify-between items-center pb-4 border-b border-ocean-cardBorder">
+            <h3 class="font-bold text-base text-ocean-text flex items-center gap-2"><i data-lucide="git-graph" class="w-5 h-5 text-ocean-accent"></i>Transaction Node Graph & AI Rationale</h3>
+            <button onclick="closeDetailPanel()" class="text-ocean-textMuted hover:text-ocean-text p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div id="panelContent" class="mt-6 space-y-6"></div>
+    </div>
+
+    <section id="exceptions" class="py-16 px-6 max-w-7xl mx-auto">
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div><div class="text-xs font-bold text-ocean-red uppercase tracking-widest">WHAT NEEDS ATTENTION NOW</div><h2 class="text-2xl lg:text-3xl font-extrabold text-ocean-text mt-1">Priority Exception Command Center</h2></div>
+                <span class="px-3 py-1 bg-ocean-red/10 border border-ocean-red/30 text-ocean-red text-xs font-bold rounded-full">Priority Sorted Queue</span>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" id="priorityExceptionsContainer">
+                <div class="p-5 border border-ocean-cardBorder rounded-xl text-center text-ocean-textMuted text-xs font-mono">Loading exceptions from API…</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="radar" class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-7 bg-ocean-card border border-ocean-cardBorder p-6 rounded-2xl space-y-6">
+                <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Multi-Dimensional Assessment</div><h3 class="text-xl font-bold text-ocean-text mt-1">AI Risk Radar</h3></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bento-grid-target" id="riskRadarGrid">
+                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Reconciliation Risk</span><span class="font-bold text-ocean-amber" id="riskReconPct">–%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-amber h-2 rounded-full transition-all" id="riskReconBar" style="width:0%"></div></div></div>
+                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Exception Exposure</span><span class="font-bold text-ocean-red" id="riskExcPct">–%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-red h-2 rounded-full transition-all" id="riskExcBar" style="width:0%"></div></div></div>
+                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Anomaly Risk</span><span class="font-bold text-ocean-green" id="riskAnomPct">–%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-green h-2 rounded-full transition-all" id="riskAnomBar" style="width:0%"></div></div></div>
+                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Data Quality</span><span class="font-bold text-ocean-accent" id="riskQualPct">–%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-accent h-2 rounded-full transition-all" id="riskQualBar" style="width:0%"></div></div></div>
+                </div>
+            </div>
+            <div class="lg:col-span-5 bg-ocean-card border border-ocean-cardBorder p-6 rounded-2xl space-y-6">
+                <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">System Integrity</div><h3 class="text-xl font-bold text-ocean-text mt-1">Data Quality Monitor</h3></div>
+                <div class="flex items-center justify-between p-4 bg-ocean-bg rounded-xl border border-ocean-cardBorder">
+                    <div><div class="text-xs text-ocean-textMuted">Overall Data Quality Score</div><div class="text-3xl font-extrabold text-ocean-green mt-1" id="qualityScoreDisplay">–%</div></div>
+                    <i data-lucide="shield-check" class="w-10 h-10 text-ocean-green"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section">
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 space-y-6">
+            <div><div class="text-xs font-bold text-ocean-amber uppercase tracking-widest">Automated Pattern Analysis</div><h2 class="text-2xl font-extrabold text-ocean-text mt-1">AI Detected Anomalies</h2></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs bento-grid-target" id="anomaliesGrid">
+                <div class="p-4 border border-ocean-cardBorder rounded-xl text-center text-ocean-textMuted font-mono">Loading anomalies from API…</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="forecasting" class="relative py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder overflow-hidden">
+        <div id="forecastingMeshContainer" class="elastic-mesh-container opacity-15"></div>
+        <div class="bg-ocean-card/90 border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 space-y-8 backdrop-blur-md relative z-10">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Predictive Financial Modeling</div><div id="forecastHeaderWarp" class="warp-text-container text-2xl lg:text-3xl font-extrabold text-ocean-text mt-1">Cash Forecast & What-If Scenario Simulator</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-1 rounded-lg flex text-xs">
+                    <button onclick="switchScenario('baseline')" id="scenBase" class="px-3 py-1.5 rounded font-bold bg-ocean-accent text-ocean-bg">Baseline</button>
+                    <button onclick="switchScenario('optimistic')" id="scenOpt" class="px-3 py-1.5 rounded text-ocean-textMuted hover:text-ocean-text">Optimistic</button>
+                    <button onclick="switchScenario('conservative')" id="scenCons" class="px-3 py-1.5 rounded text-ocean-textMuted hover:text-ocean-text">Conservative</button>
+                </div>
+            </div>
+            <div class="p-4 bg-ocean-bg border border-ocean-cardBorder rounded-xl grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                <div>
+                    <label class="block font-semibold text-ocean-gold mb-1">Simulate Delayed Customer Receivables (Days)</label>
+                    <input type="range" min="0" max="14" value="0" id="delaySlider" oninput="runWhatIfSimulation()" class="w-full accent-ocean-accent">
+                    <div class="flex justify-between text-[11px] text-ocean-textMuted mt-1"><span>0 Days</span><span id="delayVal" class="font-bold text-ocean-text">0 Days Delay</span><span>14 Days</span></div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-ocean-gold mb-1">Simulate Unexpected Vendor Expenses ($)</label>
+                    <input type="range" min="0" max="100000" step="10000" value="0" id="expenseSlider" oninput="runWhatIfSimulation()" class="w-full accent-ocean-accent">
+                    <div class="flex justify-between text-[11px] text-ocean-textMuted mt-1"><span>+$0</span><span id="expenseVal" class="font-bold text-ocean-text">+$0 Expense</span><span>+$100k</span></div>
+                </div>
+            </div>
+            <div class="bg-ocean-bg border border-ocean-cardBorder p-6 rounded-xl relative">
+                <div class="h-48 w-full flex items-end gap-2 pt-6" id="forecastBars">
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar0"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar1"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar2"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar3"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar4"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar5"></div>
+                </div>
+                <div class="flex justify-between text-[11px] font-mono text-ocean-textMuted mt-4 border-t border-ocean-cardBorder pt-2" id="forecastLabels">
+                    <span>–</span><span>–</span><span>–</span><span>–</span><span>–</span><span>–</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder">
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 space-y-6">
+            <div class="flex justify-between items-center">
+                <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Immutable Log</div><h2 class="text-xl font-bold text-ocean-text mt-1">AI Activity Log & Decision Audit Trail</h2></div>
+                <button onclick="exportAuditLog()" class="px-3 py-1.5 bg-ocean-bg border border-ocean-cardBorder text-ocean-text text-xs rounded hover:border-ocean-accent">Download Audit Log</button>
+            </div>
+            <div class="space-y-3 font-mono text-xs max-h-60 overflow-y-auto pr-2" id="auditTrailContainer">
+                <div class="p-3 bg-ocean-bg rounded border border-ocean-cardBorder text-ocean-textMuted">Loading audit log from API…</div>
+            </div>
+        </div>
+    </section>
+
+    <button onclick="openAICommandCenter()" class="fixed bottom-6 right-6 z-40 bg-ocean-accent text-ocean-bg px-5 py-3 rounded-full font-bold text-xs uppercase tracking-wider ocean-glow flex items-center space-x-2 hover:bg-cyan-300 transition-all">
+        <i data-lucide="sparkles" class="w-4 h-4"></i><span>Ask AI Controller</span>
+    </button>
+
+    <div id="aiCommandModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-ocean-card border border-ocean-accent/40 rounded-2xl w-full max-w-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-ocean-cardBorder pb-3">
+                <span class="text-xs font-bold text-ocean-accent uppercase tracking-widest flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4"></i> Global AI Command Center</span>
+                <button onclick="closeAICommandCenter()" class="text-ocean-textMuted hover:text-ocean-text"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex items-center bg-ocean-bg border border-ocean-cardBorder rounded-xl px-4 py-3">
+                <i data-lucide="terminal" class="w-5 h-5 text-ocean-accent mr-3"></i>
+                <input type="text" id="aiCommandInput" onkeydown="if(event.key==='Enter') executeAICommand()" placeholder="Ask: 'Why did match rate decrease?' or 'Show high-risk transactions'..." class="bg-transparent text-sm text-ocean-text outline-none w-full placeholder-ocean-textMuted">
+            </div>
+            <div class="flex flex-wrap gap-2 text-[11px]">
+                <button onclick="runSuggestedCmd('Show exceptions')" class="px-2.5 py-1 bg-ocean-bg border border-ocean-cardBorder text-ocean-textMuted hover:text-ocean-accent rounded">Show exceptions</button>
+                <button onclick="runSuggestedCmd('Match rate summary')" class="px-2.5 py-1 bg-ocean-bg border border-ocean-cardBorder text-ocean-textMuted hover:text-ocean-accent rounded">Match rate summary</button>
+                <button onclick="runSuggestedCmd('Show anomalies')" class="px-2.5 py-1 bg-ocean-bg border border-ocean-cardBorder text-ocean-textMuted hover:text-ocean-accent rounded">Show anomalies</button>
+            </div>
+            <div id="aiCommandResponse" class="p-4 bg-ocean-bg border border-ocean-cardBorder rounded-xl min-h-[120px] text-xs font-mono space-y-2 text-ocean-textMuted">
+                <div>AI Copilot ready. Connected to real API.</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="globalSearchModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl w-full max-w-xl p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-ocean-cardBorder pb-3">
+                <span class="text-xs font-bold text-ocean-accent uppercase">Global System Search</span>
+                <button onclick="closeGlobalSearch()" class="text-ocean-textMuted hover:text-ocean-text"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <input type="text" id="gSearchInput" onkeyup="handleGlobalSearch()" placeholder="Search TXN, Invoices, Vendors, Exceptions..." class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg p-3 text-xs text-ocean-text outline-none focus:border-ocean-accent">
+            <div id="gSearchResults" class="max-h-60 overflow-y-auto space-y-2 text-xs"></div>
+        </div>
+    </div>
+
+    <div id="shortcutsModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-ocean-cardBorder pb-3">
+                <span class="text-xs font-bold text-ocean-accent uppercase">Keyboard Shortcuts</span>
+                <button onclick="closeShortcutsModal()" class="text-ocean-textMuted hover:text-ocean-text"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-2 text-xs font-mono">
+                <div class="flex justify-between p-2 bg-ocean-bg rounded"><span>Global Search</span><span class="text-ocean-gold font-bold">⌘K / Ctrl+K</span></div>
+                <div class="flex justify-between p-2 bg-ocean-bg rounded"><span>Run Reconciliation</span><span class="text-ocean-gold font-bold">R</span></div>
+                <div class="flex justify-between p-2 bg-ocean-bg rounded"><span>Open Exceptions</span><span class="text-ocean-gold font-bold">E</span></div>
+                <div class="flex justify-between p-2 bg-ocean-bg rounded"><span>Open Forecast</span><span class="text-ocean-gold font-bold">C</span></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-8 border-t border-ocean-cardBorder text-center text-xs text-ocean-textMuted font-mono">
+        <p>© 2026 AI Finance Controller Operating System. Real backend. Real matching. Real data.</p>
+    </footer>
+
+    <!-- Supabase Auth JS (client-side auth only — no service key, no DB access) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        lucide.createIcons();
+
+        // ════════════════════════════════════════════════════════════════════
+        // CONFIGURATION
+        // Update API_BASE to match your backend URL (same origin via nginx, or
+        // explicit http://localhost:8000 for local dev without Docker).
+        // ════════════════════════════════════════════════════════════════════
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : '';
+        const SUPABASE_URL = "https://pnryywkjewwwnnushhiy.supabase.co";
+        // Publishable (anon) key — safe in browser, used ONLY for auth sign-in.
+        // The service-role key is NEVER here; all DB writes go through the FastAPI backend.
+        const SUPABASE_ANON_KEY = "sb_publishable_oaHP2kdaq4IZ9ZGNW3R-7Q_mtpQH2IQ";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let _authToken = null;
+        let _currentUser = null;
+        let _allRecords = [];
+
+        // ════════════════════════════════════════════════════════════════════
+        // AUTH HELPERS
+        // ════════════════════════════════════════════════════════════════════
+
+        async function attemptLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('loginError');
+            errEl.classList.add('hidden');
+            btn.textContent = 'Signing in…';
+            btn.disabled = true;
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                errEl.textContent = error.message;
+                errEl.classList.remove('hidden');
+                btn.textContent = 'Sign In to Dashboard';
+                btn.disabled = false;
+                return;
+            }
+
+            _authToken = data.session.access_token;
+            _currentUser = data.user;
+            document.getElementById('loginOverlay').classList.add('hidden');
+            btn.textContent = 'Sign In to Dashboard';
+            btn.disabled = false;
+            initDashboard();
+        }
+
+        async function sendMagicLink() {
+            const email = document.getElementById('loginEmail').value.trim();
+            if (!email) { alert('Enter your email first.'); return; }
+            await supabaseClient.auth.signInWithOtp({ email });
+            alert(`Magic link sent to ${email}. Check your inbox.`);
+        }
+
+        async function signOut() {
+            await supabaseClient.auth.signOut();
+            _authToken = null;
+            _currentUser = null;
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
+
+        // ── Dev Mode bypass ───────────────────────────────────────────────
+        function enterDevMode() {
+            _authToken = 'dev-mode-no-backend';
+            _currentUser = { sub: 'dev', email: 'dev@local' };
+            document.getElementById('loginOverlay').classList.add('hidden');
+            const banner = document.createElement('div');
+            banner.className = 'fixed top-20 left-0 right-0 z-50 flex justify-center pointer-events-none';
+            banner.innerHTML = `<div class="bg-ocean-amber/20 border border-ocean-amber/50 text-ocean-amber text-xs font-mono px-4 py-2 rounded-full flex items-center gap-2 pointer-events-auto shadow-lg">
+                <span class="w-2 h-2 rounded-full bg-ocean-amber animate-pulse inline-block"></span>
+                DEV MODE — Mock data shown. Start FastAPI backend on :8000 for real reconciliation.
+            </div>`;
+            document.body.appendChild(banner);
+            initDashboard();
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // MOCK DATA — shown in Dev Mode when backend is not running
+        // ════════════════════════════════════════════════════════════════════
+        const _devMode = () => _authToken === 'dev-mode-no-backend';
+
+        const MOCK_KPIS = { total_processed:52, match_rate:78.3, auto_resolved:31, exception_count:7, explainability_score:94.2 };
+        const MOCK_HEALTH = { score:82, match_rate:0.783, exception_count:7, total_records:52, quality_score:0.96, computed_at:new Date().toISOString(), history:[] };
+        const MOCK_RECORDS = [
+            { id:'TXN-9821', date:'2026-08-27', source:'Bank', description:'Stripe Settlement', amount:'₹42,850.00', matched_record:'INV-8821', status:'Matched', confidence:'97.4%', match_reason:'Exact match: amount match (±0.01), date within 3 days, reference overlap (TXN-9821 ↔ INV-8821)', raw_id:'a1' },
+            { id:'INV-8842', date:'2026-08-25', source:'ERP', description:'Acme Corp Wire', amount:'₹12,400.00', matched_record:'GW-3021', status:'Review Needed', confidence:'81.2%', match_reason:'Fuzzy match (composite=0.81): amount_score=0.98, date_score=0.67, desc_similarity=77%', raw_id:'b2' },
+            { id:'TXN-0043', date:'2026-08-24', source:'Bank', description:'HDFC Deposit', amount:'₹82,450.00', matched_record:'Unmatched', status:'Exception', confidence:'0.0%', match_reason:'No ERP record found within ±3 days and acceptable amount/description similarity for TXN-0043', raw_id:'c3' },
+            { id:'GW-3055',  date:'2026-08-23', source:'Gateway', description:'Razorpay Payout', amount:'₹9,200.00', matched_record:'INV-9001', status:'Matched', confidence:'95.1%', match_reason:'Exact match: amount match (±0.01), date within 3 days, reference overlap', raw_id:'d4' },
+            { id:'INV-7721', date:'2026-08-22', source:'ERP', description:'CloudFlare Inc', amount:'₹14,250.00', matched_record:'TXN-7700', status:'Matched', confidence:'96.8%', match_reason:'Exact match: same amount, same date, reference token overlap (INV-7721 ↔ TXN-7700)', raw_id:'e5' },
+            { id:'TXN-5510', date:'2026-08-21', source:'Bank', description:'AWS Cloud Services', amount:'₹28,700.00', matched_record:'INV-5500', status:'Matched', confidence:'99.1%', match_reason:'Exact match: identical amount, identical date, exact reference overlap', raw_id:'f6' },
+            { id:'GW-4401',  date:'2026-08-20', source:'Gateway', description:'Stripe Payout', amount:'₹12,400.00', matched_record:'GW-4399', status:'Exception', confidence:'0.0%', match_reason:'Duplicate risk: two gateway records (GW-4399, GW-4401) matched same vendor within 24h', raw_id:'g7' },
+        ];
+        const MOCK_EXCEPTIONS = [
+            { id:'exc-001', title:'Bank TXN-0043 — No ERP match found within ±3 days', description:'No ERP record found within ±3 days. Exposure: ₹82,450.00', exposure_amount:'INR 82,450.00', priority:'critical', status:'open', age_hours:4.2, created_at:new Date().toISOString() },
+            { id:'exc-002', title:'Gateway GW-4401 — Duplicate payout risk', description:'Two settlements of ₹12,400 via Stripe to same vendor within 24h', exposure_amount:'INR 12,400.00', priority:'high', status:'open', age_hours:1.1, created_at:new Date().toISOString() },
+            { id:'exc-003', title:'ERP INV-8842 — Fuzzy match needs review (81.2%)', description:'Fuzzy match confidence 81.2% — below auto-resolve threshold of 90%', exposure_amount:'INR 12,400.00', priority:'medium', status:'open', age_hours:0.5, created_at:new Date().toISOString() },
+        ];
+        const MOCK_ANOMALIES = [
+            { id:'an-001', type:'duplicate_payout', description:'Duplicate payout: Stripe Inc received ₹12,400.00 twice via Stripe within 24h (GW-4399 and GW-4401).', amount:'12400.00', detected_at:new Date().toISOString(), status:'open', detail:{ vendor:'Stripe Inc', amount:12400 } },
+            { id:'an-002', type:'variance_drift', description:'Fee variance drift for Cloudflare Inc: current fee 7.00% vs trailing avg 2.00% (drift 5.00% > threshold 3.0%).', amount:'700.00', detected_at:new Date().toISOString(), status:'open', detail:{ vendor:'Cloudflare Inc', drift_pct:5.0 } },
+        ];
+        const MOCK_AUDIT = [
+            { id:3, actor:'ai', action:'anomaly:detected:duplicate_payout', entity_type:'anomaly', entity_id:'an-001', detail:{}, created_at:new Date().toISOString() },
+            { id:2, actor:'ai', action:'exception:created', entity_type:'exception', entity_id:'exc-001', detail:{ priority:'critical' }, created_at:new Date(Date.now()-60000).toISOString() },
+            { id:1, actor:'ai', action:'reconcile:matched', entity_type:'reconciliation_match', entity_id:'a1', detail:{ confidence:97.4 }, created_at:new Date(Date.now()-120000).toISOString() },
+        ];
+        const MOCK_FORECAST = { scenario:'baseline', bars:[
+            {week_offset:0,label:'Week 1',projected_balance:124000,height_pct:52},
+            {week_offset:1,label:'Week 2',projected_balance:187000,height_pct:72},
+            {week_offset:2,label:'Week 3',projected_balance:145000,height_pct:60},
+            {week_offset:3,label:'Week 4',projected_balance:210000,height_pct:84},
+            {week_offset:4,label:'Week 5',projected_balance:165000,height_pct:67},
+            {week_offset:5,label:'Week 6',projected_balance:238000,height_pct:93},
+        ]};
+
+        // ════════════════════════════════════════════════════════════════════
+        // API HELPERS — Bearer token on all calls; mock fallback in dev mode
+        // ════════════════════════════════════════════════════════════════════
+
+        async function apiGet(path) {
+            if (_devMode()) {
+                if (path.includes('/api/kpis')) return MOCK_KPIS;
+                if (path.includes('/api/health-score')) return MOCK_HEALTH;
+                if (path.includes('/api/reconcile/records')) return MOCK_RECORDS;
+                if (path.includes('/api/exceptions')) return MOCK_EXCEPTIONS;
+                if (path.includes('/api/anomalies')) return MOCK_ANOMALIES;
+                if (path.includes('/api/audit-log')) return MOCK_AUDIT;
+                if (path.includes('/api/forecast')) return MOCK_FORECAST;
+                return {};
+            }
+            const res = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' }
+            });
+            if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+            return res.json();
+        }
+
+        async function apiPost(path, body = {}) {
+            if (_devMode()) {
+                if (path.includes('/api/reconcile/run')) {
+                    return { total_processed: 52, matched: 31, review: 14, exceptions: 7, match_rate: 0.783, health_score: 82, run_id: "dev-run" };
+                }
+                if (path.includes('/api/forecast/what-if')) {
+                    // Pre-compute basic what-if calculation visually for dev mode
+                    const delay = body.delay_days || 0;
+                    const exp = body.unexpected_expense || 0;
+                    return {
+                        scenario: 'what-if',
+                        bars: MOCK_FORECAST.bars.map(bar => {
+                            const newBalance = bar.projected_balance - (delay * 3000) - (bar.week_offset === 0 ? exp : 0);
+                            return { ...bar, projected_balance: newBalance, height_pct: Math.max(10, Math.min(95, bar.height_pct - (delay * 2) - (bar.week_offset === 0 ? exp / 2000 : 0))) };
+                        })
+                    };
+                }
+                return { ok: true };
+            }
+            const res = await fetch(`${API_BASE}${path}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+            return res.json();
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // DASHBOARD INITIALISATION
+        // ════════════════════════════════════════════════════════════════════
+
+        async function initDashboard() {
+            // Hide loading screen
+            const loader = document.getElementById('loadingScreen');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 700);
+
+            // Start visual effects
+            initElasticMesh('elasticMeshContainer', { color1: '#00F0FF', color2: '#050B14', gridColor: '#00F0FF', gridOpacity: 0.35, gridDensity: 22, tilt: 14, shading: 0.5, wobble: 5, stiffness: 0.05, damping: 0.2 });
+            initElasticMesh('forecastingMeshContainer', { color1: '#00F0FF', color2: '#0A1424', gridColor: '#00F0FF', gridOpacity: 0.15, gridDensity: 16, tilt: 6, shading: 0.2, wobble: 2, stiffness: 0.03, damping: 0.3, interaction: 'hover' });
+            initWarpText('heroHeadlineWarp', { text: 'AI Finance Controller', warpStrength: 0.35, pointerStrength: 0.55, fontSize: 52 });
+            initWarpText('opsHeaderWarp', { text: 'Live Reconciliation Workspace', warpStrength: 0.2, pointerStrength: 0.3, fontSize: 28 });
+            initWarpText('forecastHeaderWarp', { text: 'Cash Forecast & What-If Scenario Simulator', warpStrength: 0.2, pointerStrength: 0.3, fontSize: 28 });
+            initMagicBento('magicBentoGrid');
+            initMagicBento('riskRadarGrid');
+            initMagicBento('anomaliesGrid');
+
+            // Load all data from real API
+            await Promise.all([
+                loadKPIs(),
+                loadHealthScore(),
+                loadRecords(),
+                loadExceptions(),
+                loadAnomalies(),
+                loadAuditLog(),
+                loadForecast('baseline'),
+            ]);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // DATA LOADERS — each fetches from a real API endpoint
+        // ════════════════════════════════════════════════════════════════════
+
+        async function loadKPIs() {
+            try {
+                const data = await apiGet('/api/kpis');
+                document.getElementById('kpi-records').textContent = data.total_processed.toLocaleString();
+                document.getElementById('kpi-matchrate').textContent = `${data.match_rate}%`;
+                document.getElementById('kpi-resolved').textContent = data.auto_resolved.toLocaleString();
+                document.getElementById('kpi-exceptions').textContent = data.exception_count.toLocaleString();
+                document.getElementById('kpi-explainability').textContent = `${data.explainability_score}%`;
+
+                // Update brief
+                document.getElementById('briefMatchRate').textContent = `${data.match_rate}%`;
+                document.getElementById('briefExceptionCount').textContent = data.exception_count;
+                document.getElementById('briefAutoResolved').textContent = data.auto_resolved.toLocaleString();
+                document.getElementById('briefOpenExc').textContent = data.exception_count;
+                document.getElementById('briefExplain').textContent = `${data.explainability_score}%`;
+
+                // Update confidence breakdown
+                updateConfidenceCounts(_allRecords);
+
+                // Update risk radar
+                const excRisk = Math.min(100, (data.exception_count / Math.max(data.total_processed, 1)) * 100);
+                const reconRisk = 100 - data.match_rate;
+                setRiskBar('riskReconPct', 'riskReconBar', reconRisk.toFixed(1), reconRisk > 10 ? 'ocean-amber' : 'ocean-green');
+                setRiskBar('riskExcPct', 'riskExcBar', excRisk.toFixed(1), excRisk > 5 ? 'ocean-red' : 'ocean-green');
+            } catch(e) { console.error('KPI load failed:', e); }
+        }
+
+        function setRiskBar(pctId, barId, pct, color) {
+            document.getElementById(pctId).textContent = `${pct}%`;
+            const bar = document.getElementById(barId);
+            bar.style.width = `${pct}%`;
+        }
+
+        async function loadHealthScore() {
+            try {
+                const data = await apiGet('/api/health-score');
+                const score = data.score;
+                document.getElementById('healthScoreValue').textContent = score;
+                document.getElementById('healthCircle').setAttribute('stroke-dasharray', `${score}, 100`);
+                document.getElementById('healthRefreshedLabel').textContent = `Last Refreshed: ${new Date(data.computed_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+
+                let badgeClass = 'bg-ocean-green/20 border-ocean-green/40 text-ocean-green';
+                let badgeText = 'EXCELLENT';
+                if (score < 70) { badgeClass = 'bg-ocean-red/20 border-ocean-red/40 text-ocean-red'; badgeText = 'CRITICAL'; }
+                else if (score < 85) { badgeClass = 'bg-ocean-amber/20 border-ocean-amber/40 text-ocean-amber'; badgeText = 'REVIEW'; }
+
+                const badge = document.getElementById('healthBadge');
+                badge.className = `px-3 py-1 border font-bold text-xs rounded-full ${badgeClass}`;
+                badge.textContent = badgeText;
+
+                if (data.quality_score !== null) {
+                    document.getElementById('qualityScoreDisplay').textContent = `${(data.quality_score * 100).toFixed(1)}%`;
+                    const qualRisk = 100 - data.quality_score * 100;
+                    setRiskBar('riskQualPct', 'riskQualBar', qualRisk.toFixed(1), qualRisk > 5 ? 'ocean-amber' : 'ocean-accent');
+                }
+            } catch(e) { console.error('Health score load failed:', e); }
+        }
+
+        async function loadRecords(statusFilter = 'ALL', sourceFilter = 'ALL', searchQ = '') {
+            try {
+                let url = '/api/reconcile/records?limit=100';
+                if (statusFilter !== 'ALL') url += `&status=${statusFilter}`;
+                if (sourceFilter !== 'ALL') url += `&source=${sourceFilter}`;
+                if (searchQ) url += `&search=${encodeURIComponent(searchQ)}`;
+
+                const data = await apiGet(url);
+                _allRecords = data;
+                renderTable(data);
+                updateConfidenceCounts(data);
+            } catch(e) {
+                document.getElementById('recordsTableBody').innerHTML =
+                    '<tr><td colspan="9" class="p-6 text-center text-ocean-red text-xs font-mono">API error — run reconciliation first or check backend.</td></tr>';
+            }
+        }
+
+        function updateConfidenceCounts(records) {
+            let high = 0, med = 0, low = 0;
+            records.forEach(r => {
+                const val = parseFloat(r.confidence);
+                if (val >= 90) high++;
+                else if (val >= 70) med++;
+                else low++;
+            });
+            document.getElementById('highConfCount').textContent = `${high}`;
+            document.getElementById('medConfCount').textContent = `${med}`;
+            document.getElementById('lowConfCount').textContent = `${low}`;
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('recordsTableBody');
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-ocean-textMuted text-xs font-mono">No records match filter. Run reconciliation to populate.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '';
+            data.forEach(rec => {
+                let statusBadge = rec.status === 'Matched'
+                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-ocean-green/20 text-ocean-green border border-ocean-green/30">🟢 Matched</span>`
+                    : rec.status === 'Review Needed'
+                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-ocean-amber/20 text-ocean-amber border border-ocean-amber/30">🟡 Review Needed</span>`
+                    : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-ocean-red/20 text-ocean-red border border-ocean-red/30">🔴 Exception</span>`;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-ocean-card cursor-pointer transition-colors';
+                tr.onclick = () => openDetailPanel(rec);
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-ocean-accent font-semibold">${rec.id}</td>
+                    <td class="p-3 font-mono text-ocean-textMuted">${rec.date}</td>
+                    <td class="p-3"><span class="bg-ocean-bg px-2 py-0.5 rounded border border-ocean-cardBorder text-[10px]">${rec.source}</span></td>
+                    <td class="p-3 font-medium text-ocean-text">${rec.description}</td>
+                    <td class="p-3 font-mono font-bold">${rec.amount}</td>
+                    <td class="p-3 font-mono text-ocean-textMuted">${rec.matched_record}</td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3 font-mono">${rec.confidence}</td>
+                    <td class="p-3 text-right"><button class="text-ocean-accent hover:underline text-xs">Inspect →</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterRecords() {
+            const search = document.getElementById('searchInput').value;
+            const source = document.getElementById('sourceFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            loadRecords(status, source, search);
+        }
+
+        function filterByConfidence(tier) {
+            const filtered = _allRecords.filter(rec => {
+                const val = parseFloat(rec.confidence);
+                if (tier === 'HIGH') return val >= 90;
+                if (tier === 'MED') return val >= 70 && val < 90;
+                if (tier === 'LOW') return val < 70;
+                return true;
+            });
+            renderTable(filtered);
+            addLocalAuditEntry(`Filtered by confidence: ${tier}`);
+        }
+
+        async function loadExceptions() {
+            try {
+                const data = await apiGet('/api/exceptions?status=open&limit=6');
+                const container = document.getElementById('priorityExceptionsContainer');
+                if (!data.length) {
+                    container.innerHTML = '<div class="p-5 border border-ocean-cardBorder rounded-xl text-center text-ocean-green text-xs font-mono col-span-2">✅ No open exceptions. All records reconciled.</div>';
+                    return;
+                }
+                container.innerHTML = '';
+                data.forEach(exc => {
+                    const priorityColors = {
+                        critical: 'ocean-red', high: 'ocean-amber', medium: 'ocean-accent', low: 'ocean-green'
+                    };
+                    const color = priorityColors[exc.priority] || 'ocean-accent';
+                    const excEl = document.createElement('div');
+                    excEl.className = 'bg-ocean-bg border border-ocean-cardBorder p-5 rounded-xl space-y-3';
+                    excEl.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="px-2 py-0.5 bg-${color}/20 text-${color} border border-${color}/30 text-[10px] font-bold rounded uppercase">${exc.priority} Priority</span>
+                                <h4 class="text-sm font-bold text-ocean-text mt-2">${exc.title}</h4>
+                            </div>
+                            <span class="font-mono font-bold text-sm text-ocean-text">${exc.exposure_amount || '—'}</span>
+                        </div>
+                        <p class="text-xs text-ocean-textMuted">${exc.description || ''}</p>
+                        <div class="flex items-center justify-between pt-2 border-t border-ocean-cardBorder">
+                            <span class="text-[10px] text-ocean-gold font-mono">Age: ${exc.age_hours.toFixed(1)}h</span>
+                            <div class="flex gap-2">
+                                <button onclick="approveException('${exc.id}', this)" class="px-3 py-1 bg-ocean-green/20 border border-ocean-green/40 text-ocean-green text-xs rounded hover:bg-ocean-green/30">Approve</button>
+                                <button onclick="rejectException('${exc.id}', this)" class="px-3 py-1 bg-ocean-red/20 border border-ocean-red/40 text-ocean-red text-xs rounded hover:bg-ocean-red/30">Reject</button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(excEl);
+                });
+            } catch(e) { console.error('Exceptions load failed:', e); }
+        }
+
+        async function approveException(id, btn) {
+            try {
+                await apiPost(`/api/exceptions/${id}/approve`, { note: 'Approved via dashboard' });
+                btn.closest('.bg-ocean-bg').style.opacity = '0.4';
+                addLocalAuditEntry(`Exception ${id.substring(0, 8)} APPROVED`);
+            } catch(e) { alert('Approval failed — controller role required.'); }
+        }
+
+        async function rejectException(id, btn) {
+            try {
+                await apiPost(`/api/exceptions/${id}/reject`, { note: 'Rejected via dashboard' });
+                btn.closest('.bg-ocean-bg').style.opacity = '0.4';
+                addLocalAuditEntry(`Exception ${id.substring(0, 8)} REJECTED`);
+            } catch(e) { alert('Rejection failed — controller role required.'); }
+        }
+
+        async function loadAnomalies() {
+            try {
+                const data = await apiGet('/api/anomalies?limit=6');
+                const grid = document.getElementById('anomaliesGrid');
+                if (!data.length) {
+                    grid.innerHTML = '<div class="p-4 border border-ocean-cardBorder rounded-xl text-center text-ocean-green text-xs font-mono col-span-2">✅ No anomalies detected in current data set.</div>';
+                    return;
+                }
+                grid.innerHTML = '';
+                data.forEach((anom, idx) => {
+                    const el = document.createElement('div');
+                    el.className = 'magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2 cursor-pointer';
+                    el.innerHTML = `
+                        <div class="flex justify-between font-bold text-ocean-amber">
+                            <span>ANOMALY #${idx+1} • ${anom.type.replace(/_/g,' ').toUpperCase()}</span>
+                            <span class="font-mono">${anom.amount ? `${parseFloat(anom.amount).toLocaleString()}` : '–'}</span>
+                        </div>
+                        <p class="text-xs text-ocean-textMuted">${anom.description}</p>
+                        <div class="text-[11px] text-ocean-accent font-mono">${anom.detected_at.substring(0,10)} • ${anom.status}</div>
+                    `;
+                    grid.appendChild(el);
+                });
+
+                // Update anomaly risk bar
+                setRiskBar('riskAnomPct', 'riskAnomBar', Math.min(100, data.length * 10).toFixed(0), data.length > 3 ? 'ocean-red' : 'ocean-amber');
+            } catch(e) { console.error('Anomalies load failed:', e); }
+        }
+
+        async function loadAuditLog() {
+            try {
+                const data = await apiGet('/api/audit-log?limit=20');
+                const container = document.getElementById('auditTrailContainer');
+                container.innerHTML = '';
+                data.forEach(entry => {
+                    const div = document.createElement('div');
+                    div.className = 'p-3 bg-ocean-bg rounded border border-ocean-cardBorder flex justify-between items-center';
+                    const time = new Date(entry.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+                    div.innerHTML = `
+                        <div>
+                            <span class="text-ocean-accent font-bold">[${time}]</span>
+                            <span class="text-ocean-text ml-2">${entry.action.toUpperCase()} — ${entry.entity_type || ''} ${entry.entity_id ? '#' + entry.entity_id.substring(0,8) : ''}</span>
+                        </div>
+                        <span class="text-ocean-green font-bold text-[10px]">LOGGED</span>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch(e) { console.error('Audit log load failed:', e); }
+        }
+
+        async function loadForecast(scenario = 'baseline') {
+            try {
+                const data = await apiGet(`/api/forecast?scenario=${scenario}`);
+                updateForecastBars(data.bars);
+            } catch(e) { console.error('Forecast load failed:', e); }
+        }
+
+        function updateForecastBars(bars) {
+            if (!bars || !bars.length) return;
+            const labelEl = document.getElementById('forecastLabels');
+            labelEl.innerHTML = bars.map(b => `<span>${b.label}</span>`).join('');
+            bars.forEach((bar, i) => {
+                const el = document.getElementById(`bar${i}`);
+                if (el) {
+                    el.style.height = `${bar.height_pct}%`;
+                    // Color by balance direction
+                    const color = bar.projected_balance >= 0 ? 'rgba(0,240,255,' : 'rgba(255,23,68,';
+                    const opacity = 0.3 + (bar.height_pct / 100) * 0.7;
+                    el.style.background = `${color}${opacity.toFixed(2)})`;
+                    el.title = `${bar.label}: ${bar.projected_balance >= 0 ? '+' : ''}${bar.projected_balance.toLocaleString()}`;
+                }
+            });
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // RECONCILIATION
+        // ════════════════════════════════════════════════════════════════════
+
+        async function runReconciliation() {
+            const btn = document.getElementById('runReconcileBtn');
+            const panel = document.getElementById('liveProcessingPanel');
+            const terminal = document.getElementById('procTerminal');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-pulse">Running…</span>';
+            panel.classList.remove('hidden');
+            terminal.innerHTML = '';
+
+            const logs = [
+                '> INGESTING BANK & GATEWAY STREAMS...',
+                '> NORMALIZING CURRENCY & DATE STAMPS...',
+                '> RUNNING EXACT MATCH PASS (±0.01 amount, ±3 days)...',
+                '> RUNNING FUZZY PASS (rapidfuzz token_set_ratio)...',
+                '> DETECTING ANOMALIES (duplicate/variance/schedule)...',
+                '> COMPUTING HEALTH SCORE...',
+                '> UPDATING CASH FORECAST SCENARIOS...',
+            ];
+            logs.forEach((log, idx) => {
+                setTimeout(() => {
+                    const d = document.createElement('div');
+                    d.textContent = log;
+                    terminal.appendChild(d);
+                    terminal.scrollTop = terminal.scrollHeight;
+                }, idx * 300);
+            });
+
+            try {
+                const result = await apiPost('/api/reconcile/run');
+                setTimeout(async () => {
+                    panel.classList.add('hidden');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Run AI Reconciliation</span>';
+                    lucide.createIcons();
+                    await Promise.all([loadKPIs(), loadHealthScore(), loadRecords(), loadExceptions(), loadAnomalies(), loadAuditLog(), loadForecast('baseline')]);
+                    addLocalAuditEntry(`Reconciliation complete — ${result.matched} matched, ${result.exceptions} exceptions, health ${result.health_score}/100`);
+                }, logs.length * 300 + 200);
+            } catch(e) {
+                panel.classList.add('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Run AI Reconciliation</span>';
+                lucide.createIcons();
+                alert('Reconciliation failed. Check backend is running:\n' + e.message);
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // FORECAST / WHAT-IF
+        // ════════════════════════════════════════════════════════════════════
+
+        async function switchScenario(mode) {
+            ['Base','Opt','Cons'].forEach(s => {
+                const btn = document.getElementById(`scen${s}`);
+                btn.className = 'px-3 py-1.5 rounded font-bold ' + (mode === {Base:'baseline',Opt:'optimistic',Cons:'conservative'}[s] ? 'bg-ocean-accent text-ocean-bg' : 'text-ocean-textMuted hover:text-ocean-text');
+            });
+            await loadForecast(mode);
+            addLocalAuditEntry(`Forecast scenario: ${mode.toUpperCase()}`);
+        }
+
+        let whatIfDebounce = null;
+        async function runWhatIfSimulation() {
+            const delay = parseInt(document.getElementById('delaySlider').value);
+            const expense = parseInt(document.getElementById('expenseSlider').value);
+            document.getElementById('delayVal').textContent = `${delay} Days Delay`;
+            document.getElementById('expenseVal').textContent = `+$${expense.toLocaleString()} Expense`;
+            clearTimeout(whatIfDebounce);
+            whatIfDebounce = setTimeout(async () => {
+                try {
+                    const result = await apiPost('/api/forecast/what-if', { delay_days: delay, unexpected_expense: expense });
+                    updateForecastBars(result.bars);
+                } catch(e) { console.error('What-if failed:', e); }
+            }, 300);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // UI HELPERS
+        // ════════════════════════════════════════════════════════════════════
+
+        function openDetailPanel(rec) {
+            const panel = document.getElementById('detailPanel');
+            document.getElementById('panelContent').innerHTML = `
+                <div class="p-4 bg-ocean-bg rounded-xl border border-ocean-cardBorder space-y-2">
+                    <div class="text-xs text-ocean-textMuted">Record ID</div>
+                    <div class="text-lg font-mono font-bold text-ocean-accent">${rec.id}</div>
+                    <div class="text-xs font-semibold text-ocean-text">${rec.description} (${rec.amount})</div>
+                </div>
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-ocean-accent uppercase tracking-wider">Match Rationale</h4>
+                    <div class="p-4 bg-ocean-bg border border-ocean-cardBorder rounded-xl text-xs font-mono space-y-2">
+                        <div class="text-ocean-text">${rec.match_reason || 'No rationale recorded yet.'}</div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-ocean-gold uppercase tracking-wider">Match Decision</h4>
+                    <div class="p-3 bg-ocean-bg border border-ocean-cardBorder rounded text-xs space-y-2">
+                        <div class="flex justify-between font-bold text-ocean-text"><span>Matched To: ${rec.matched_record}</span><span class="${parseFloat(rec.confidence) >= 90 ? 'text-ocean-green' : 'text-ocean-amber'}">${rec.confidence}</span></div>
+                        <div class="flex justify-between text-ocean-textMuted"><span>Status: ${rec.status}</span><span>Source: ${rec.source}</span></div>
+                    </div>
+                </div>
+            `;
+            panel.classList.remove('translate-x-full');
+        }
+        function closeDetailPanel() { document.getElementById('detailPanel').classList.add('translate-x-full'); }
+
+        function addLocalAuditEntry(msg) {
+            const container = document.getElementById('auditTrailContainer');
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = 'p-3 bg-ocean-bg rounded border border-ocean-accent/20 flex justify-between items-center';
+            div.innerHTML = `<div><span class="text-ocean-accent font-bold">[${time}]</span><span class="text-ocean-text ml-2">${msg}</span></div><span class="text-ocean-green font-bold text-[10px]">LOCAL</span>`;
+            container.prepend(div);
+        }
+
+        function exportReconciliationData() {
+            if (!_allRecords.length) { alert('No records loaded yet. Run reconciliation first.'); return; }
+            const csv = ['ID,Date,Source,Description,Amount,MatchedRecord,Status,Confidence',
+                ..._allRecords.map(r => `${r.id},${r.date},${r.source},"${r.description}",${r.amount},${r.matched_record},${r.status},${r.confidence}`)
+            ].join('\n');
+            const a = document.createElement('a');
+            a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+            a.download = `reconciliation_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            addLocalAuditEntry('Exported reconciliation data as CSV.');
+        }
+
+        function exportAuditLog() { loadAuditLog(); addLocalAuditEntry('Refreshed audit log.'); }
+
+        function openAICommandCenter() { document.getElementById('aiCommandModal').classList.remove('hidden'); }
+        function closeAICommandCenter() { document.getElementById('aiCommandModal').classList.add('hidden'); }
+
+        async function executeAICommand() {
+            const input = document.getElementById('aiCommandInput').value.toLowerCase();
+            const resp = document.getElementById('aiCommandResponse');
+            resp.innerHTML = '<div class="text-ocean-accent animate-pulse">> Querying API...</div>';
+            try {
+                if (input.includes('exception')) {
+                    const data = await apiGet('/api/exceptions?status=open');
+                    resp.innerHTML = `<div class="text-ocean-green">> ${data.length} open exceptions. Largest: ${data[0]?.title || 'N/A'}</div>`;
+                } else if (input.includes('match rate') || input.includes('kpi')) {
+                    const data = await apiGet('/api/kpis');
+                    resp.innerHTML = `<div class="text-ocean-accent">> Match rate: ${data.match_rate}% | Auto-resolved: ${data.auto_resolved} | Explainability: ${data.explainability_score}%</div>`;
+                } else if (input.includes('anomal')) {
+                    const data = await apiGet('/api/anomalies');
+                    resp.innerHTML = `<div class="text-ocean-amber">> ${data.length} anomalies detected: ${data.map(a => a.type).join(', ') || 'none'}</div>`;
+                } else {
+                    const data = await apiGet('/api/kpis');
+                    resp.innerHTML = `<div class="text-ocean-text">> Processed: ${data.total_processed} | Match: ${data.match_rate}% | Exceptions: ${data.exception_count}</div>`;
+                }
+            } catch(e) {
+                resp.innerHTML = `<div class="text-ocean-red">> API error: ${e.message}</div>`;
+            }
+        }
+        function runSuggestedCmd(cmd) { document.getElementById('aiCommandInput').value = cmd; executeAICommand(); }
+
+        function openGlobalSearch() { document.getElementById('globalSearchModal').classList.remove('hidden'); }
+        function closeGlobalSearch() { document.getElementById('globalSearchModal').classList.add('hidden'); }
+        function handleGlobalSearch() {
+            const q = document.getElementById('gSearchInput').value.toLowerCase();
+            const res = document.getElementById('gSearchResults');
+            if (!q) { res.innerHTML = ''; return; }
+            const matches = _allRecords.filter(r => r.id.toLowerCase().includes(q) || r.description.toLowerCase().includes(q));
+            res.innerHTML = matches.slice(0, 5).map(r =>
+                `<div class="p-2 bg-ocean-bg rounded text-ocean-accent font-mono cursor-pointer" onclick="closeGlobalSearch()">${r.id} — ${r.description} (${r.status})</div>`
+            ).join('') || '<div class="text-ocean-textMuted text-xs">No records found.</div>';
+        }
+
+        function openShortcutsModal() { document.getElementById('shortcutsModal').classList.remove('hidden'); }
+        function closeShortcutsModal() { document.getElementById('shortcutsModal').classList.add('hidden'); }
+        function toggleNotificationPanel() { document.getElementById('notifPanel').classList.toggle('hidden'); }
+        function scrollToSection(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); }
+        function setMode(mode) {
+            document.getElementById('modeOpBtn').className = 'px-2.5 py-1 rounded font-bold ' + (mode === 'operational' ? 'bg-ocean-accent text-ocean-bg' : 'text-ocean-textMuted hover:text-ocean-text');
+            document.getElementById('modeExecBtn').className = 'px-2.5 py-1 rounded font-bold ' + (mode === 'executive' ? 'bg-ocean-accent text-ocean-bg' : 'text-ocean-textMuted hover:text-ocean-text');
+        }
+        function handleTimeTravel(val) {
+            const states = ['Past 30 Days', 'TODAY', 'Next 7 Days', 'Next 30 Days'];
+            document.getElementById('timeTravelLabel').textContent = `State: ${states[val]}`;
+            addLocalAuditEntry(`Time travel view: ${states[val]}`);
+        }
+        function openOnboardingTour() { alert('FINANCER OS TOUR\n\n1. Sign in → dashboard loads real data from API\n2. Click "Run AI Reconciliation" → engine matches bank/ERP/gateway records\n3. Review exceptions → approve/reject with controller role\n4. Move what-if sliders → forecast recomputes server-side\n5. Check audit log → every action is immutably logged'); }
+
+        // ── Keyboard shortcuts ────────────────────────────────────────────
+        document.addEventListener('keydown', e => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openGlobalSearch(); }
+            if (e.key === '?') openShortcutsModal();
+            if (!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
+                if (e.key.toLowerCase() === 'r') runReconciliation();
+                if (e.key.toLowerCase() === 'e') scrollToSection('exceptions');
+                if (e.key.toLowerCase() === 'c') scrollToSection('forecasting');
+            }
+        });
+
+        // ── Cursor ───────────────────────────────────────────────────────
+        const cursor = document.getElementById('targetCursor');
+        document.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
+
+        // ── Loading screen / auth check ───────────────────────────────────
+        window.addEventListener('load', async () => {
+            lucide.createIcons();
+            // Check for existing Supabase session
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                _authToken = session.access_token;
+                _currentUser = session.user;
+                document.getElementById('loginOverlay').classList.add('hidden');
+                initDashboard();
+            } else {
+                // Show login, hide loading screen
+                const loader = document.getElementById('loadingScreen');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }
+        });
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // ════════════════════════════════════════════════════════════════════
+        // ELASTIC MESH WEBGL — unchanged from original
+        // ════════════════════════════════════════════════════════════════════
+        function initElasticMesh(targetContainerId, options = {}) {
+            const container = document.getElementById(targetContainerId);
+            if (!container || !window.OGL) return;
+            const isMobile = window.innerWidth <= 768;
+            const { color1='#00F0FF', color2='#050B14', highlight='#ffffff', showGrid=true, gridDensity=22, gridOpacity=0.35, gridColor='#00F0FF', borderRadius=25, stiffness=0.05, damping=0.2, grabRadius=0.6, pull=0.4, wobble=5, tilt=14, shading=0.5, resolution=isMobile?12:25, interaction=isMobile?'none':'hover', enabled=!prefersReducedMotion } = options;
+            const DIST=4.6, FIT=0.82;
+            const VERT=`precision highp float;attribute vec2 aGrid;attribute vec2 uv;attribute vec3 aOffset;attribute vec3 aNormal;uniform float uAspect;uniform float uTilt;uniform float uDist;uniform float uFit;varying vec2 vUv;varying vec3 vNormal;varying float vDepth;void main(){vUv=uv;vec2 base=vec2((aGrid.x*2.0-1.0)*uAspect,1.0-aGrid.y*2.0);vec3 p=vec3(base+aOffset.xy,aOffset.z);float ct=cos(uTilt);float st=sin(uTilt);float ry=p.y*ct-p.z*st;float rz=p.y*st+p.z*ct;p.y=ry;p.z=rz;float persp=uDist/(uDist-p.z);vec2 clip=vec2(p.x/uAspect,p.y)*persp*uFit;vNormal=aNormal;vDepth=aOffset.z;gl_Position=vec4(clip,0.0,1.0);}`;
+            const FRAG=`precision highp float;varying vec2 vUv;varying vec3 vNormal;varying float vDepth;uniform vec3 uColor1;uniform vec3 uColor2;uniform vec3 uHighlight;uniform float uShading;uniform vec2 uRes;uniform float uRadius;uniform float uGrid;uniform float uGridDensity;uniform float uGridOpacity;uniform vec3 uGridColor;void main(){vec3 base=mix(uColor1,uColor2,clamp(vUv.y,0.0,1.0));vec3 N=normalize(vNormal);vec3 L=normalize(vec3(-0.35,0.55,0.78));vec3 V=vec3(0.0,0.0,1.0);vec3 H=normalize(L+V);float diff=clamp(dot(N,L),0.0,1.0);float specRaw=pow(clamp(dot(N,H),0.0,1.0),26.0);float specFlat=pow(clamp(H.z,0.0,1.0),26.0);float spec=clamp((specRaw-specFlat)/(1.0-specFlat),0.0,1.0);float ao=clamp(1.0+vDepth*0.45,0.65,1.25);vec3 lit=base*(1.0-uShading*0.28);lit+=base*diff*uShading*0.55;lit*=ao;lit+=uHighlight*spec*uShading*0.25;if(uGrid>0.5){vec2 g=vUv*uGridDensity;vec2 w=uGridDensity/max(uRes,vec2(1.0));vec2 d=abs(fract(g-0.5)-0.5)/max(w*1.5,vec2(1e-4));float line=1.0-clamp(min(d.x,d.y),0.0,1.0);lit=mix(lit,uGridColor,line*uGridOpacity*(0.45+diff*0.55));}vec2 p=(vUv-0.5)*uRes;vec2 halfRes=uRes*0.5;float r=min(uRadius,min(halfRes.x,halfRes.y));vec2 q=abs(p)-(halfRes-r);float sd=length(max(q,0.0))+min(max(q.x,q.y),0.0)-r;float alpha=1.0-smoothstep(-1.25,1.25,sd);if(alpha<=0.002)discard;gl_FragColor=vec4(lit,alpha);}`;
+            function hexToRgb(h){let x=(h||'').replace('#','').trim();if(x.length===3)x=x.split('').map(c=>c+c).join('');const n=parseInt(x||'000000',16);return[((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255];}
+            const renderer=new OGL.Renderer({alpha:true,antialias:true,dpr:Math.min(window.devicePixelRatio||1,2)});
+            const gl=renderer.gl;gl.clearColor(0,0,0,0);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+            const N=Math.max(6,Math.min(40,Math.round(resolution)));const nodeCount=N*N;const aGrid=new Float32Array(nodeCount*2);const uv=new Float32Array(nodeCount*2);const aOffset=new Float32Array(nodeCount*3);const aNormal=new Float32Array(nodeCount*3);
+            for(let j=0;j<N;j++)for(let i=0;i<N;i++){const idx=j*N+i,u=i/(N-1),v=j/(N-1);aGrid[idx*2]=u;aGrid[idx*2+1]=v;uv[idx*2]=u;uv[idx*2+1]=v;aNormal[idx*3+2]=1;}
+            const quads=(N-1)*(N-1);const index=new Uint16Array(quads*6);let t=0;for(let j=0;j<N-1;j++)for(let i=0;i<N-1;i++){const a=j*N+i,b=a+1,c=a+N,d=c+1;index[t++]=a;index[t++]=c;index[t++]=b;index[t++]=b;index[t++]=c;index[t++]=d;}
+            const geometry=new OGL.Geometry(gl,{aGrid:{size:2,data:aGrid},uv:{size:2,data:uv},aOffset:{size:3,data:aOffset},aNormal:{size:3,data:aNormal},index:{data:index}});
+            const program=new OGL.Program(gl,{vertex:VERT,fragment:FRAG,transparent:true,cullFace:null,uniforms:{uColor1:{value:hexToRgb(color1)},uColor2:{value:hexToRgb(color2)},uHighlight:{value:hexToRgb(highlight)},uGrid:{value:showGrid?1:0},uGridDensity:{value:gridDensity},uGridOpacity:{value:gridOpacity},uGridColor:{value:hexToRgb(gridColor)},uShading:{value:shading},uRes:{value:[1,1]},uRadius:{value:borderRadius},uAspect:{value:1},uTilt:{value:(tilt*Math.PI)/180},uDist:{value:DIST},uFit:{value:FIT}}});
+            const mesh=new OGL.Mesh(gl,{geometry,program});const baseX=new Float32Array(nodeCount);const baseY=new Float32Array(nodeCount);const pos=new Float32Array(nodeCount*3);const vel=new Float32Array(nodeCount*3);const accel=new Float32Array(nodeCount*3);
+            let aspect=1;function refreshBase(){for(let idx=0;idx<nodeCount;idx++){baseX[idx]=(aGrid[idx*2]*2-1)*aspect;baseY[idx]=1-aGrid[idx*2+1]*2;}}
+            function resize(){const w=container.offsetWidth||1,h=container.offsetHeight||1;renderer.setSize(w,h);aspect=w/h;program.uniforms.uAspect.value=aspect;program.uniforms.uRes.value=[w,h];refreshBase();}
+            const ro=new ResizeObserver(resize);ro.observe(container);resize();
+            const pointer={x:0,y:0,tx:0,ty:0,active:false,targetActive:false};
+            function toPlane(cx,cy){const rect=container.getBoundingClientRect();const mx=(cx-rect.left)/rect.width,my=(cy-rect.top)/rect.height;const clipX=mx*2-1,clipY=1-my*2;const tRad=(tilt*Math.PI)/180,ct=Math.cos(tRad),st=Math.sin(tRad);const a=clipY/(ct*FIT*DIST);const py=(a*DIST)/(1+a*st);const persp=DIST/(DIST-py*st);pointer.tx=(clipX*aspect)/(persp*FIT);pointer.ty=py;}
+            if(interaction!=='none'&&enabled){window.addEventListener('mousemove',e=>{toPlane(e.clientX,e.clientY);if(interaction==='hover')pointer.targetActive=true;});container.addEventListener('mouseenter',()=>{if(interaction==='hover')pointer.targetActive=true;});container.addEventListener('mouseleave',()=>{pointer.targetActive=false;});}
+            const STEP=1/120,MAX_SUB=5;let accTime=0,last=performance.now();
+            function substep(){const s=stiffness,retain=1-damping,coupling=0.06+wobble*0.032;const active=pointer.active&&enabled;const r=Math.max(0.08,grabRadius)*1.4,invR=1/r,force=pull*0.009;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const idx=j*N+i,o3=idx*3;const ox=pos[o3],oy=pos[o3+1],oz=pos[o3+2];let ax=-s*ox,ay=-s*oy,az=-s*oz;let sumx=0,sumy=0,sumz=0,cnt=0;if(i>0){const n=(idx-1)*3;sumx+=pos[n];sumy+=pos[n+1];sumz+=pos[n+2];cnt++;}if(i<N-1){const n=(idx+1)*3;sumx+=pos[n];sumy+=pos[n+1];sumz+=pos[n+2];cnt++;}if(j>0){const n=(idx-N)*3;sumx+=pos[n];sumy+=pos[n+1];sumz+=pos[n+2];cnt++;}if(j<N-1){const n=(idx+N)*3;sumx+=pos[n];sumy+=pos[n+1];sumz+=pos[n+2];cnt++;}ax+=coupling*(sumx-cnt*ox);ay+=coupling*(sumy-cnt*oy);az+=coupling*(sumz-cnt*oz);if(active){const dx=pointer.x-(baseX[idx]+ox);const dy=pointer.y-(baseY[idx]+oy);const d=Math.sqrt(dx*dx+dy*dy);const tnorm=d*invR;if(tnorm<1){const zBump=1-tnorm*tnorm;az+=force*zBump*zBump*6.0;if(d>1e-4){const pinch=tnorm*(1-tnorm)*(1-tnorm)*6.75;const dir=(force*pinch*1.6)/d;ax+=dx*dir;ay+=dy*dir;}}}accel[o3]=ax;accel[o3+1]=ay;accel[o3+2]=az;}for(let k=0;k<nodeCount;k++){const o3=k*3;vel[o3]=(vel[o3]+accel[o3])*retain;vel[o3+1]=(vel[o3+1]+accel[o3+1])*retain;vel[o3+2]=(vel[o3+2]+accel[o3+2])*retain;pos[o3]+=vel[o3];pos[o3+1]+=vel[o3+1];pos[o3+2]+=vel[o3+2];}}
+            function commit(){for(let j=0;j<N;j++)for(let i=0;i<N;i++){const idx=j*N+i,o3=idx*3;const iL=i>0?idx-1:idx,iR=i<N-1?idx+1:idx,iD=j>0?idx-N:idx,iU=j<N-1?idx+N:idx;const lx=baseX[iL]+pos[iL*3],ly=baseY[iL]+pos[iL*3+1],lz=pos[iL*3+2];const rx=baseX[iR]+pos[iR*3],ry=baseY[iR]+pos[iR*3+1],rz=pos[iR*3+2];const dx=baseX[iD]+pos[iD*3],dy=baseY[iD]+pos[iD*3+1],dz=pos[iD*3+2];const ux=baseX[iU]+pos[iU*3],uy=baseY[iU]+pos[iU*3+1],uz=pos[iU*3+2];const txx=rx-lx,txy=ry-ly,txz=rz-lz,tyx=ux-dx,tyy=uy-dy,tyz=uz-dz;let nx=txy*tyz-txz*tyy,ny=txz*tyx-txx*tyz,nz=txx*tyy-txy*tyx;if(nz<0){nx=-nx;ny=-ny;nz=-nz;}const len=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;aNormal[o3]=nx/len;aNormal[o3+1]=ny/len;aNormal[o3+2]=nz/len;aOffset[o3]=pos[o3];aOffset[o3+1]=pos[o3+1];aOffset[o3+2]=pos[o3+2];}geometry.attributes.aOffset.needsUpdate=true;geometry.attributes.aNormal.needsUpdate=true;}
+            function frame(now){requestAnimationFrame(frame);let dt=(now-last)/1000;last=now;if(dt>0.25)dt=0.25;const kLerp=1-Math.exp(-Math.max(dt,1e-4)/0.06);pointer.x+=(pointer.tx-pointer.x)*kLerp;pointer.y+=(pointer.ty-pointer.y)*kLerp;pointer.active=pointer.targetActive;accTime+=dt;let sub=0;while(accTime>=STEP&&sub<MAX_SUB){substep();accTime-=STEP;sub++;}if(accTime>STEP)accTime=0;commit();renderer.render({scene:mesh});}
+            requestAnimationFrame(frame);container.appendChild(gl.canvas);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // WARP TEXT WEBGL — unchanged from original
+        // ════════════════════════════════════════════════════════════════════
+        function initWarpText(containerId, options = {}) {
+            const container = document.getElementById(containerId);
+            if (!container || !window.OGL) return;
+            const textContent = options.text || container.innerText.trim();
+            container.innerHTML = '';
+            const { color='#F0F6FC', warpStrength=0.25, warpScale=3.0, speed=1.0, pointerStrength=0.35, fontSize=48, fontWeight='800', fontFamily='Inter, sans-serif' } = options;
+            const VERT=`precision highp float;attribute vec2 position;attribute vec2 uv;varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position,0.0,1.0);}`;
+            const FRAG=`precision highp float;uniform sampler2D tMap;uniform float uTime;uniform vec2 uPointer;uniform float uWarpStrength;uniform float uWarpScale;uniform float uPointerStrength;varying vec2 vUv;void main(){vec2 uv=vUv;float dist=distance(uv,uPointer);float pointerEffect=smoothstep(0.4,0.0,dist)*uPointerStrength;vec2 warp=vec2(sin(uv.y*uWarpScale+uTime*1.5),cos(uv.x*uWarpScale+uTime*1.5))*(uWarpStrength*0.05+pointerEffect*0.08);vec4 tex=texture2D(tMap,uv+warp);gl_FragColor=tex;}`;
+            const textCanvas=document.createElement('canvas');const ctx=textCanvas.getContext('2d');
+            function renderTextTexture(){const w=Math.max(container.offsetWidth*2,400),h=Math.max(container.offsetHeight*2,120);textCanvas.width=w;textCanvas.height=h;ctx.clearRect(0,0,w,h);ctx.fillStyle=color;ctx.font=`${fontWeight} ${fontSize*2}px ${fontFamily}`;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(textContent,10,h/2);}
+            renderTextTexture();
+            const renderer=new OGL.Renderer({alpha:true,antialias:true,dpr:Math.min(window.devicePixelRatio||1,2)});const gl=renderer.gl;renderer.setSize(container.offsetWidth||300,container.offsetHeight||60);
+            const geometry=new OGL.Geometry(gl,{position:{size:2,data:new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1])},uv:{size:2,data:new Float32Array([0,1,1,1,0,0,0,0,1,1,1,0])}});
+            const texture=new OGL.Texture(gl,{generateMipmaps:false});texture.image=textCanvas;
+            const program=new OGL.Program(gl,{vertex:VERT,fragment:FRAG,transparent:true,uniforms:{tMap:{value:texture},uTime:{value:0},uPointer:{value:[0.5,0.5]},uWarpStrength:{value:prefersReducedMotion?0:warpStrength},uWarpScale:{value:warpScale},uPointerStrength:{value:prefersReducedMotion?0:pointerStrength}}});
+            const mesh=new OGL.Mesh(gl,{geometry,program});container.appendChild(gl.canvas);
+            let pointer=[0.5,0.5];window.addEventListener('mousemove',e=>{const rect=container.getBoundingClientRect();if(e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom){pointer[0]=(e.clientX-rect.left)/rect.width;pointer[1]=1.0-((e.clientY-rect.top)/rect.height);}});
+            function resize(){const w=container.offsetWidth||300,h=container.offsetHeight||60;renderer.setSize(w,h);renderTextTexture();texture.needsUpdate=true;}
+            const ro=new ResizeObserver(resize);ro.observe(container);
+            let startTime=performance.now();
+            function frame(now){requestAnimationFrame(frame);if(!prefersReducedMotion)program.uniforms.uTime.value=(now-startTime)*0.001*speed;program.uniforms.uPointer.value=pointer;renderer.render({scene:mesh});}
+            requestAnimationFrame(frame);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // MAGIC BENTO — unchanged from original
+        // ════════════════════════════════════════════════════════════════════
+        function initMagicBento(gridId) {
+            const grid = document.getElementById(gridId);
+            if (!grid || !window.gsap) return;
+            const isMobile = window.innerWidth <= 768;
+            const defaultGlowColor = grid.getAttribute('data-glow-color') || '0, 240, 255';
+            const spotlightRadius = 350;
+            const spotlight = document.createElement('div');
+            spotlight.className = 'global-spotlight';
+            spotlight.style.cssText = `position:fixed;width:700px;height:700px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(${defaultGlowColor},0.15) 0%,rgba(${defaultGlowColor},0.08) 15%,rgba(${defaultGlowColor},0.04) 25%,transparent 70%);z-index:200;opacity:0;transform:translate(-50%,-50%);mix-blend-mode:screen;`;
+            document.body.appendChild(spotlight);
+            const cards = grid.querySelectorAll('.magic-bento-card');
+            cards.forEach(c => c.style.setProperty('--glow-color', defaultGlowColor));
+            if (!prefersReducedMotion) {
+                document.addEventListener('mousemove', e => {
+                    const section = grid.closest('.bento-section');
+                    const rect = section?.getBoundingClientRect();
+                    const inside = rect && e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+                    if (!inside) { gsap.to(spotlight, { opacity: 0, duration: 0.3 }); cards.forEach(c => c.style.setProperty('--glow-intensity', '0')); return; }
+                    const proximity = spotlightRadius * 0.5, fadeDistance = spotlightRadius * 0.75;
+                    let minDist = Infinity;
+                    cards.forEach(card => {
+                        const cr = card.getBoundingClientRect();
+                        const cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2;
+                        const dist = Math.max(0, Math.hypot(e.clientX - cx, e.clientY - cy) - Math.max(cr.width, cr.height) / 2);
+                        minDist = Math.min(minDist, dist);
+                        let intensity = dist <= proximity ? 1 : dist <= fadeDistance ? (fadeDistance - dist) / (fadeDistance - proximity) : 0;
+                        card.style.setProperty('--glow-x', `${((e.clientX - cr.left) / cr.width) * 100}%`);
+                        card.style.setProperty('--glow-y', `${((e.clientY - cr.top) / cr.height) * 100}%`);
+                        card.style.setProperty('--glow-intensity', intensity.toString());
+                        card.style.setProperty('--glow-radius', `${spotlightRadius}px`);
+                    });
+                    gsap.to(spotlight, { left: e.clientX, top: e.clientY, duration: 0.1 });
+                    const targetOpacity = minDist <= proximity ? 0.8 : minDist <= fadeDistance ? ((fadeDistance - minDist) / (fadeDistance - proximity)) * 0.8 : 0;
+                    gsap.to(spotlight, { opacity: targetOpacity, duration: targetOpacity > 0 ? 0.2 : 0.5 });
+                });
+            }
+            if (!isMobile && !prefersReducedMotion) {
+                cards.forEach(card => {
+                    let particles = [], isHovered = false;
+                    card.addEventListener('mouseenter', () => {
+                        isHovered = true;
+                        const rect = card.getBoundingClientRect();
+                        for (let i = 0; i < 6; i++) setTimeout(() => {
+                            if (!isHovered) return;
+                            const p = document.createElement('div');
+                            p.style.cssText = `position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(${defaultGlowColor},1);box-shadow:0 0 6px rgba(${defaultGlowColor},0.8);pointer-events:none;z-index:100;left:${Math.random()*rect.width}px;top:${Math.random()*rect.height}px;`;
+                            card.appendChild(p); particles.push(p);
+                            gsap.fromTo(p, {scale:0,opacity:0}, {scale:1,opacity:1,duration:0.3,ease:'back.out(1.7)'});
+                            gsap.to(p, {x:(Math.random()-0.5)*80,y:(Math.random()-0.5)*80,duration:2+Math.random()*2,ease:'none',repeat:-1,yoyo:true});
+                            gsap.to(p, {opacity:0.2,duration:1.5,ease:'power2.inOut',repeat:-1,yoyo:true});
+                        }, i * 120);
+                    });
+                    card.addEventListener('mousemove', e => {
+                        const rect = card.getBoundingClientRect();
+                        const x = e.clientX - rect.left, y = e.clientY - rect.top;
+                        gsap.to(card, { rotateX: ((y - rect.height/2) / rect.height) * -6, rotateY: ((x - rect.width/2) / rect.width) * 6, x: (x - rect.width/2) * 0.03, y: (y - rect.height/2) * 0.03, duration: 0.15, ease: 'power2.out', transformPerspective: 1000 });
+                    });
+                    card.addEventListener('mouseleave', () => {
+                        isHovered = false;
+                        gsap.to(card, { rotateX: 0, rotateY: 0, x: 0, y: 0, duration: 0.3 });
+                        particles.forEach(p => gsap.to(p, { scale: 0, opacity: 0, duration: 0.3, onComplete: () => p.remove() }));
+                        particles = [];
+                    });
+                });
+            }
+        }
+    </script>
+</body>
+</html>

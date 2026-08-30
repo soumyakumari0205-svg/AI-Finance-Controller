@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic>=2.12.0
+pydantic-settings
+python-jose[cryptography]
+httpx
+rapidfuzz
+APScheduler
+python-dotenv
+pytest
+pytest-asyncio
+pytest-httpx
+faker
