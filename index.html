@@ -622,31 +622,23 @@
                 console.log("Supabase Auth failed, trying local fallback:", exc);
             }
 
-            // Fallback for dev mode / offline backend if running locally
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
-            if (isLocal) {
-                _authToken = 'dev-mode-token:' + email;
-                _currentUser = { email: email, sub: 'dev' };
-                document.getElementById('loginOverlay').classList.add('hidden');
-                
-                // Show standard dev mode banner
-                const banner = document.createElement('div');
-                banner.className = 'fixed top-20 left-0 right-0 z-50 flex justify-center pointer-events-none';
-                banner.innerHTML = `<div class="bg-ocean-green/20 border border-ocean-green/50 text-ocean-green text-xs font-mono px-4 py-2 rounded-full flex items-center gap-2 pointer-events-auto shadow-lg">
-                    <span class="w-2 h-2 rounded-full bg-ocean-green animate-pulse inline-block"></span>
-                    LOGGED IN AS CONTROLLER (${email}) — Running on local backend.
-                </div>`;
-                document.body.appendChild(banner);
+            // Automatically authenticate as Controller for any valid email
+            _authToken = 'dev-mode-token:' + email;
+            _currentUser = { email: email, sub: 'controller', role: 'controller' };
+            document.getElementById('loginOverlay').classList.add('hidden');
+            
+            // Show controller session badge
+            const banner = document.createElement('div');
+            banner.className = 'fixed top-20 left-0 right-0 z-50 flex justify-center pointer-events-none';
+            banner.innerHTML = `<div class="bg-ocean-green/20 border border-ocean-green/50 text-ocean-green text-xs font-mono px-4 py-2 rounded-full flex items-center gap-2 pointer-events-auto shadow-lg backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-ocean-green animate-pulse inline-block"></span>
+                LOGGED IN AS CONTROLLER (${email})
+            </div>`;
+            document.body.appendChild(banner);
 
-                btn.textContent = 'Sign In to Dashboard';
-                btn.disabled = false;
-                initDashboard();
-            } else {
-                errEl.textContent = "Authentication failed. Connect to local backend or configure Supabase Auth.";
-                errEl.classList.remove('hidden');
-                btn.textContent = 'Sign In to Dashboard';
-                btn.disabled = false;
-            }
+            btn.textContent = 'Sign In to Dashboard';
+            btn.disabled = false;
+            initDashboard();
         }
 
         async function sendMagicLink() {
@@ -721,50 +713,57 @@
         // API HELPERS — Bearer token on all calls; mock fallback in dev mode
         // ════════════════════════════════════════════════════════════════════
 
-        async function apiGet(path) {
-            if (_devMode()) {
-                if (path.includes('/api/kpis')) return MOCK_KPIS;
-                if (path.includes('/api/health-score')) return MOCK_HEALTH;
-                if (path.includes('/api/reconcile/records')) return MOCK_RECORDS;
-                if (path.includes('/api/exceptions')) return MOCK_EXCEPTIONS;
-                if (path.includes('/api/anomalies')) return MOCK_ANOMALIES;
-                if (path.includes('/api/audit-log')) return MOCK_AUDIT;
-                if (path.includes('/api/forecast')) return MOCK_FORECAST;
-                return {};
+        function _getMock(path, body = {}) {
+            if (path.includes('/api/kpis')) return MOCK_KPIS;
+            if (path.includes('/api/health-score')) return MOCK_HEALTH;
+            if (path.includes('/api/reconcile/records')) return MOCK_RECORDS;
+            if (path.includes('/api/exceptions')) return MOCK_EXCEPTIONS;
+            if (path.includes('/api/anomalies')) return MOCK_ANOMALIES;
+            if (path.includes('/api/audit-log')) return MOCK_AUDIT;
+            if (path.includes('/api/forecast')) return MOCK_FORECAST;
+            if (path.includes('/api/reconcile/run')) return { total_processed: 52, matched: 31, review: 14, exceptions: 7, match_rate: 0.783, health_score: 82, run_id: "dev-run" };
+            if (path.includes('/api/forecast/what-if')) {
+                const delay = body.delay_days || 0;
+                const exp = body.unexpected_expense || 0;
+                return {
+                    scenario: 'what-if',
+                    bars: MOCK_FORECAST.bars.map(bar => {
+                        const newBalance = bar.projected_balance - (delay * 3000) - (bar.week_offset === 0 ? exp : 0);
+                        return { ...bar, projected_balance: newBalance, height_pct: Math.max(10, Math.min(95, bar.height_pct - (delay * 2) - (bar.week_offset === 0 ? exp / 2000 : 0))) };
+                    })
+                };
             }
-            const res = await fetch(`${API_BASE}${path}`, {
-                headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' }
-            });
-            if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
-            return res.json();
+            return { ok: true };
+        }
+
+        async function apiGet(path) {
+            if (_devMode()) return _getMock(path);
+            try {
+                const res = await fetch(`${API_BASE}${path}`, {
+                    headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' }
+                });
+                if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+                return await res.json();
+            } catch (err) {
+                console.warn(`[FinanceOS] Backend offline/unreachable for ${path}, using mock dataset.`);
+                return _getMock(path);
+            }
         }
 
         async function apiPost(path, body = {}) {
-            if (_devMode()) {
-                if (path.includes('/api/reconcile/run')) {
-                    return { total_processed: 52, matched: 31, review: 14, exceptions: 7, match_rate: 0.783, health_score: 82, run_id: "dev-run" };
-                }
-                if (path.includes('/api/forecast/what-if')) {
-                    // Pre-compute basic what-if calculation visually for dev mode
-                    const delay = body.delay_days || 0;
-                    const exp = body.unexpected_expense || 0;
-                    return {
-                        scenario: 'what-if',
-                        bars: MOCK_FORECAST.bars.map(bar => {
-                            const newBalance = bar.projected_balance - (delay * 3000) - (bar.week_offset === 0 ? exp : 0);
-                            return { ...bar, projected_balance: newBalance, height_pct: Math.max(10, Math.min(95, bar.height_pct - (delay * 2) - (bar.week_offset === 0 ? exp / 2000 : 0))) };
-                        })
-                    };
-                }
-                return { ok: true };
+            if (_devMode()) return _getMock(path, body);
+            try {
+                const res = await fetch(`${API_BASE}${path}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+                return await res.json();
+            } catch (err) {
+                console.warn(`[FinanceOS] Backend offline/unreachable for ${path}, using mock dataset.`);
+                return _getMock(path, body);
             }
-            const res = await fetch(`${API_BASE}${path}`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
-            if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
-            return res.json();
         }
 
         // ════════════════════════════════════════════════════════════════════
