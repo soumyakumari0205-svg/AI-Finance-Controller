@@ -384,6 +384,16 @@ async def run_reconciliation(db: AsyncSession) -> dict:
     )
     await db.flush()
 
+    # Clear previous open exceptions before regenerating them this run — otherwise
+    # every reconciliation run (manual or scheduled) permanently stacks new exception
+    # rows on top of old ones for the same underlying unresolved records. Approved/
+    # rejected exceptions (status != open) are a human decision and audit trail, so
+    # they're preserved.
+    await db.execute(
+        delete(Exception_).where(Exception_.status == ExceptionStatus.open)
+    )
+    await db.flush()
+
     all_results: List[MatchResult] = []
 
     # Bank → ERP matching
