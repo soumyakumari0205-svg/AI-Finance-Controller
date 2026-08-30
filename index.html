@@ -574,7 +574,7 @@
         // Update API_BASE to match your backend URL (same origin via nginx, or
         // explicit http://localhost:8000 for local dev without Docker).
         // ════════════════════════════════════════════════════════════════════
-        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : '';
+        const API_BASE = window.ENV_API_URL || localStorage.getItem('API_URL') || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : '');
         const SUPABASE_URL = "https://pnryywkjewwwnnushhiy.supabase.co";
         // Publishable (anon) key — safe in browser, used ONLY for auth sign-in.
         // The service-role key is NEVER here; all DB writes go through the FastAPI backend.
