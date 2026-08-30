@@ -6,6 +6,7 @@ services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
+    command: postgres -c app.finance_app_password=${FINANCE_APP_PASSWORD:-finance_app_pass}
     environment:
       POSTGRES_USER: finance
       POSTGRES_PASSWORD: finance
@@ -32,7 +33,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://finance:finance@db:5432/finance_controller
+      DATABASE_URL: postgresql+asyncpg://finance_app:${FINANCE_APP_PASSWORD:-finance_app_pass}@db:5432/finance_controller
       ENABLE_SEED_ENDPOINT: "true"          # dev only
       SCHEDULER_INTERVAL_MINUTES: "30"
       SUPABASE_URL: "${SUPABASE_URL:-}"

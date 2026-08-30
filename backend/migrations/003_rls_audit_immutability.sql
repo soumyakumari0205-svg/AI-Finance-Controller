@@ -9,11 +9,16 @@
 
 BEGIN;
 
--- Create a restricted application role if it doesn't exist
+-- Create a restricted application role dynamically using a session config variable
 DO $$
+DECLARE
+    app_pwd text;
 BEGIN
+    app_pwd := COALESCE(current_setting('app.finance_app_password', true), 'finance_app_pass');
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'finance_app') THEN
-        CREATE ROLE finance_app LOGIN PASSWORD 'change_in_production';
+        EXECUTE format('CREATE ROLE finance_app LOGIN PASSWORD %L', app_pwd);
+    ELSE
+        EXECUTE format('ALTER ROLE finance_app WITH PASSWORD %L', app_pwd);
     END IF;
 END
 $$;
@@ -27,8 +32,12 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO finance_app;
 REVOKE UPDATE ON audit_log FROM finance_app;
 REVOKE DELETE ON audit_log FROM finance_app;
 
+-- Revoke from the owner/migration user 'finance' for runtime enforcement
+REVOKE UPDATE, DELETE ON audit_log FROM finance;
+
 -- Enable Row Level Security on audit_log as an additional layer
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_log FORCE ROW LEVEL SECURITY;
 
 -- Policy: anyone authenticated can SELECT; only INSERT is allowed (no update/delete)
 CREATE POLICY audit_log_select_policy ON audit_log

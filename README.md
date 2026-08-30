@@ -70,12 +70,13 @@ copy .env.example .env         # Windows
 # cp .env.example .env         # Mac/Linux
 # Edit .env: set DATABASE_URL to your local Postgres
 
-# Run database migrations
-psql $DATABASE_URL -f migrations/001_initial_schema.sql
-psql $DATABASE_URL -f migrations/002_indexes.sql
-psql $DATABASE_URL -f migrations/003_rls_audit_immutability.sql
+# Run database migrations as the database owner/superuser (e.g., 'finance'):
+psql $DATABASE_URL_OWNER -f migrations/001_initial_schema.sql
+psql $DATABASE_URL_OWNER -f migrations/002_indexes.sql
+psql $DATABASE_URL_OWNER -f migrations/003_rls_audit_immutability.sql
 
-# Start the API server
+# Start the API server using the restricted 'finance_app' role credentials
+# (Configure DATABASE_URL in .env to use the 'finance_app' login details)
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -93,13 +94,17 @@ pytest tests/test_anomaly.py -v      # Unit: anomaly detection
 pytest tests/test_integration.py -v  # Integration: seed → reconcile → verify
 ```
 
+> [!WARNING]
+> **Database Immutability Testing Gap:**  
+> Database-level `audit_log` immutability (RLS policies and `REVOKE` permissions) is a Postgres-only feature. The default pytest suite runs against in-memory SQLite (which does not support Postgres roles and RLS), meaning these restrictions are bypassed in test runs. Verification must be performed directly against a Postgres instance.
+
 ---
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |---|---|---|
-| `DATABASE_URL` | Async Postgres connection string | `postgresql+asyncpg://finance:finance@db:5432/finance_controller` |
+| `DATABASE_URL` | Async Postgres connection string. For runtime safety and RLS enforcement, connect using the restricted `finance_app` role. | `postgresql+asyncpg://finance_app:finance_app_pass@db:5432/finance_controller` |
 | `SUPABASE_URL` | Your Supabase project URL | — |
 | `SUPABASE_SERVICE_KEY` | Service role key (server-side only, NEVER in browser) | — |
 | `SUPABASE_JWT_SECRET` | Shared JWT secret (local dev without JWKS) | `dev-secret-change-me` |
@@ -177,8 +182,9 @@ docker tag ai-finance-controller gcr.io/YOUR_PROJECT/ai-finance-controller
 docker push gcr.io/YOUR_PROJECT/ai-finance-controller
 
 # Set production environment variables:
-# DATABASE_URL     → your Supabase Postgres connection string
-# SUPABASE_JWKS_URL → https://your-project.supabase.co/auth/v1/jwks
+# DATABASE_URL         → your Supabase Postgres connection string (must use the restricted 'finance_app' role credentials)
+# DATABASE_URL_OWNER   → your Supabase admin/postgres connection string (used only for running the migrations/DDL scripts)
+# SUPABASE_JWKS_URL    → https://your-project.supabase.co/auth/v1/jwks
 # SUPABASE_SERVICE_KEY → from Supabase dashboard (Settings > API)
 # ENABLE_SEED_ENDPOINT → false (do NOT enable in production)
 ```
