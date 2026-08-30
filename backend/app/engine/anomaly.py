@@ -85,8 +85,10 @@ async def detect_duplicate_payouts(db: AsyncSession) -> List[Anomaly]:
 
             flagged_pairs.add(pair_key)
             detail = {
-                "settlement_a": str(prior.id),
-                "settlement_b": str(current.id),
+                "settlement_a_id": prior.settlement_id,
+                "settlement_b_id": current.settlement_id,
+                "settlement_a_uuid": str(prior.id),
+                "settlement_b_uuid": str(current.id),
                 "vendor": current.vendor,
                 "amount": float(current.amount),
                 "currency": current.currency,
