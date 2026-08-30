@@ -121,14 +121,15 @@ async def detect_variance_drift(db: AsyncSession) -> List[Anomaly]:
     from their trailing 90-day average.
     """
     threshold = settings.fee_variance_threshold
-    cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+    cutoff_date = (datetime.now(timezone.utc) - timedelta(days=90)).date()
 
-    # Load all gateway settlements that have a fee_amount
+    # Load all gateway settlements within the trailing window that have a fee_amount
     rows = (
         await db.execute(
             select(GatewaySettlement).where(
                 GatewaySettlement.fee_amount.isnot(None),
                 GatewaySettlement.amount > 0,
+                GatewaySettlement.date >= cutoff_date,
             )
         )
     ).scalars().all()
