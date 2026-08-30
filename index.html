@@ -153,49 +153,44 @@
     <!-- ══════════════════════════════════════════════════════════════════════
          TOP NAVIGATION BAR WITH LIVE CONNECTION PILL
     ═══════════════════════════════════════════════════════════════════════ -->
-    <nav class="fixed top-0 left-0 right-0 z-40 bg-ocean-bg/90 backdrop-blur-md border-b border-ocean-cardBorder">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center">
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-ocean-bg/95 backdrop-blur-md border-b border-ocean-cardBorder">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+            <div class="flex items-center space-x-3 shrink-0">
+                <div class="w-9 h-9 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center shrink-0">
                     <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
                 </div>
-                <span class="font-bold text-lg tracking-wider uppercase text-ocean-text">Finance<span class="text-ocean-accent">OS</span></span>
+                <span class="font-bold text-lg tracking-wider uppercase text-ocean-text whitespace-nowrap">Finance<span class="text-ocean-accent">OS</span></span>
             </div>
 
-            <div class="hidden lg:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted">
-                <a href="#features" class="hover:text-ocean-accent transition-colors">OS Capabilities</a>
+            <div class="hidden xl:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted whitespace-nowrap">
+                <a href="#features" class="hover:text-ocean-accent transition-colors">Capabilities</a>
                 <a href="#brief" class="hover:text-ocean-accent transition-colors">Daily Brief</a>
-                <a href="#demo" class="hover:text-ocean-accent transition-colors">Operations Center</a>
+                <a href="#demo" class="hover:text-ocean-accent transition-colors">Operations</a>
                 <a href="#exceptions" class="hover:text-ocean-accent transition-colors">Exceptions</a>
                 <a href="#radar" class="hover:text-ocean-accent transition-colors">Risk Radar</a>
-                <a href="#forecasting" class="hover:text-ocean-accent transition-colors">Forecast & What-If</a>
+                <a href="#forecasting" class="hover:text-ocean-accent transition-colors">Forecast</a>
             </div>
 
-            <div class="flex items-center space-x-3">
-                <!-- Connection status indicator -->
-                <div id="connStatusPill" onclick="openLoginModal()" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-full border text-xs font-mono bg-ocean-amber/10 border-ocean-amber/30 text-ocean-amber cursor-pointer hover:border-ocean-amber transition-colors" title="Click to configure backend connection">
-                    <span id="connStatusDot" class="w-2 h-2 rounded-full bg-ocean-amber animate-pulse inline-block"></span>
+            <div class="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
+                <!-- Compact connection status pill -->
+                <div id="connStatusPill" onclick="openLoginModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full border text-xs font-mono whitespace-nowrap bg-ocean-amber/10 border-ocean-amber/30 text-ocean-amber cursor-pointer hover:border-ocean-amber transition-colors shrink-0" title="Click to connect live backend">
+                    <span id="connStatusDot" class="w-2 h-2 rounded-full bg-ocean-amber animate-pulse shrink-0"></span>
                     <span id="connStatusText">Sample Data</span>
                 </div>
 
-                <button id="connectNavBtn" onclick="openLoginModal()" class="bg-ocean-accent/15 border border-ocean-accent/40 text-ocean-accent px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-ocean-accent hover:text-ocean-bg transition-all flex items-center gap-1.5">
-                    <i data-lucide="plug" class="w-3.5 h-3.5"></i>
-                    <span id="connectNavBtnLabel">Connect Backend</span>
-                </button>
-
-                <div class="bg-ocean-card border border-ocean-cardBorder p-1 rounded-lg flex text-xs">
+                <div class="bg-ocean-card border border-ocean-cardBorder p-1 rounded-lg flex text-xs shrink-0">
                     <button id="modeOpBtn" onclick="setMode('operational')" class="px-2.5 py-1 rounded font-bold bg-ocean-accent text-ocean-bg">Ops</button>
                     <button id="modeExecBtn" onclick="setMode('executive')" class="px-2.5 py-1 rounded text-ocean-textMuted hover:text-ocean-text">Exec</button>
                 </div>
 
-                <button onclick="openGlobalSearch()" class="hidden sm:flex items-center space-x-2 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted px-3 py-1.5 rounded-lg text-xs hover:border-ocean-accent/50">
+                <button onclick="openGlobalSearch()" class="hidden sm:flex items-center space-x-2 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted px-3 py-1.5 rounded-lg text-xs hover:border-ocean-accent/50 shrink-0">
                     <i data-lucide="search" class="w-3.5 h-3.5 text-ocean-accent"></i>
                     <span>Search</span>
                     <kbd class="bg-ocean-bg border border-ocean-cardBorder px-1.5 py-0.5 rounded text-[10px] text-ocean-gold">⌘K</kbd>
                 </button>
 
                 <div class="relative">
-                    <button onclick="toggleNotificationPanel()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text relative">
+                    <button onclick="toggleNotificationPanel()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text relative" title="Notifications">
                         <i data-lucide="bell" class="w-4 h-4"></i>
                         <span id="notifBadge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ocean-red rounded-full"></span>
                     </button>
@@ -227,14 +222,14 @@
     <!-- ══════════════════════════════════════════════════════════════════════
          DEV MODE / SAMPLE DATA NOTICE BANNER
     ═══════════════════════════════════════════════════════════════════════ -->
-    <div id="sampleDataBanner" class="fixed top-20 left-0 right-0 z-30 bg-ocean-card/95 border-b border-ocean-cardBorder px-6 py-2.5 text-xs text-ocean-text flex flex-wrap items-center justify-between gap-3 shadow-lg backdrop-blur-md transition-all">
+    <div id="sampleDataBanner" class="fixed top-20 left-0 right-0 z-30 bg-ocean-card/95 border-b border-ocean-cardBorder px-4 sm:px-6 py-2 text-xs text-ocean-text flex flex-wrap items-center justify-between gap-2 shadow-md backdrop-blur-md transition-all">
         <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-ocean-amber animate-pulse inline-block"></span>
-            <span class="text-ocean-amber font-mono font-bold">DEV MODE:</span>
-            <span class="text-ocean-textMuted">Showing pre-computed ledger verification data (20 records, 96.8% match rate). Connect your backend for live reconciliation.</span>
+            <span class="w-2 h-2 rounded-full bg-ocean-amber animate-pulse shrink-0"></span>
+            <span class="text-ocean-amber font-mono font-bold whitespace-nowrap">DEV MODE:</span>
+            <span class="text-ocean-textMuted">Showing pre-computed ledger verification data (20 records, 96.8% match rate).</span>
         </div>
-        <div class="flex items-center gap-3">
-            <button onclick="openLoginModal()" class="px-3 py-1 bg-ocean-accent/20 border border-ocean-accent/40 text-ocean-accent rounded font-semibold text-xs hover:bg-ocean-accent hover:text-ocean-bg transition-all flex items-center gap-1.5">
+        <div class="flex items-center gap-2">
+            <button onclick="openLoginModal()" class="px-3 py-1 bg-ocean-accent/20 border border-ocean-accent/40 text-ocean-accent rounded font-semibold text-xs hover:bg-ocean-accent hover:text-ocean-bg transition-all flex items-center gap-1.5 whitespace-nowrap">
                 <i data-lucide="plug" class="w-3 h-3"></i>
                 <span>Connect Live Backend</span>
             </button>
