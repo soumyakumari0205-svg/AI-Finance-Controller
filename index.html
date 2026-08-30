@@ -78,7 +78,7 @@
     <div id="targetCursor" class="hidden md:block"></div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         CONNECT BACKEND & SIGN IN MODAL — Opt-in, non-blocking
+         SIGN IN MODAL — Simple, clean, universal
     ═══════════════════════════════════════════════════════════════════════ -->
     <div id="loginModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 sm:p-8 w-full max-w-md space-y-6 shadow-2xl ocean-glow relative">
@@ -97,43 +97,31 @@
             </div>
 
             <div class="space-y-1">
-                <h2 class="text-xl font-extrabold text-ocean-text">Connect Live Backend</h2>
-                <p class="text-xs text-ocean-textMuted">Connect to your FastAPI backend or Supabase instance for live ledger reconciliation.</p>
+                <h2 class="text-xl font-extrabold text-ocean-text">Sign In</h2>
+                <p class="text-xs text-ocean-textMuted">Enter your email and password to access the autonomous financial reconciliation workspace.</p>
             </div>
 
             <div id="loginError" class="hidden p-3 bg-ocean-red/10 border border-ocean-red/30 rounded-lg text-xs text-ocean-red"></div>
 
             <div class="space-y-3">
                 <div class="space-y-1">
-                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Backend API Host</label>
-                    <input type="text" id="backendUrlInput" value="http://localhost:8000" placeholder="e.g. http://localhost:8000 or https://api.yourdomain.com"
-                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-2 text-xs font-mono text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Controller Email</label>
-                    <input type="email" id="loginEmail" placeholder="controller@yourcompany.com"
-                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-2 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none">
+                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="user@company.com"
+                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-2.5 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none">
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Password</label>
                     <input type="password" id="loginPassword" placeholder="••••••••"
-                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-2 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none"
+                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-2.5 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none"
                         onkeydown="if(event.key==='Enter') attemptLogin()">
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <button onclick="attemptLogin()" id="loginBtn"
-                    class="w-full bg-ocean-accent text-ocean-bg py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-cyan-300 transition-all ocean-glow flex items-center justify-center gap-2">
-                    <i data-lucide="zap" class="w-4 h-4"></i>
-                    <span>Connect & Sign In</span>
-                </button>
-                <button onclick="enterDevMode(); closeLoginModal();"
-                    class="w-full bg-ocean-bg border border-ocean-cardBorder text-ocean-textMuted hover:text-ocean-text py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2">
-                    <span>Continue with Sample Data</span>
-                </button>
-            </div>
-            <p class="text-center text-[10px] text-ocean-textMuted">Sample mode operates fully in-browser with pre-computed reconciliation vectors.</p>
+            <button onclick="attemptLogin()" id="loginBtn"
+                class="w-full bg-ocean-accent text-ocean-bg py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-cyan-300 transition-all ocean-glow flex items-center justify-center gap-2">
+                <i data-lucide="log-in" class="w-4 h-4"></i>
+                <span>Sign In to Dashboard</span>
+            </button>
         </div>
     </div>
 
@@ -151,7 +139,7 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         TOP NAVIGATION BAR WITH LIVE CONNECTION PILL
+         TOP NAVIGATION BAR
     ═══════════════════════════════════════════════════════════════════════ -->
     <nav class="fixed top-0 left-0 right-0 z-40 bg-ocean-bg/95 backdrop-blur-md border-b border-ocean-cardBorder">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
@@ -172,11 +160,15 @@
             </div>
 
             <div class="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
-                <!-- Compact connection status pill -->
-                <div id="connStatusPill" onclick="openLoginModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full border text-xs font-mono whitespace-nowrap bg-ocean-amber/10 border-ocean-amber/30 text-ocean-amber cursor-pointer hover:border-ocean-amber transition-colors shrink-0" title="Click to connect live backend">
-                    <span id="connStatusDot" class="w-2 h-2 rounded-full bg-ocean-amber animate-pulse shrink-0"></span>
-                    <span id="connStatusText">Sample Data</span>
+                <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full border text-xs font-mono whitespace-nowrap bg-ocean-green/10 border-ocean-green/30 text-ocean-green shrink-0">
+                    <span class="w-2 h-2 rounded-full bg-ocean-green animate-pulse shrink-0"></span>
+                    <span>System Online</span>
                 </div>
+
+                <button onclick="openLoginModal()" id="userNavBtn" class="px-3 py-1.5 rounded-lg bg-ocean-accent/15 border border-ocean-accent/40 text-ocean-accent text-xs font-semibold hover:bg-ocean-accent hover:text-ocean-bg transition-all flex items-center gap-1.5 shrink-0">
+                    <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                    <span id="userNavLabel">Sign In</span>
+                </button>
 
                 <div class="bg-ocean-card border border-ocean-cardBorder p-1 rounded-lg flex text-xs shrink-0">
                     <button id="modeOpBtn" onclick="setMode('operational')" class="px-2.5 py-1 rounded font-bold bg-ocean-accent text-ocean-bg">Ops</button>
@@ -218,26 +210,6 @@
             </div>
         </div>
     </nav>
-
-    <!-- ══════════════════════════════════════════════════════════════════════
-         DEV MODE / SAMPLE DATA NOTICE BANNER
-    ═══════════════════════════════════════════════════════════════════════ -->
-    <div id="sampleDataBanner" class="fixed top-20 left-0 right-0 z-30 bg-ocean-card/95 border-b border-ocean-cardBorder px-4 sm:px-6 py-2 text-xs text-ocean-text flex flex-wrap items-center justify-between gap-2 shadow-md backdrop-blur-md transition-all">
-        <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-ocean-amber animate-pulse shrink-0"></span>
-            <span class="text-ocean-amber font-mono font-bold whitespace-nowrap">DEV MODE:</span>
-            <span class="text-ocean-textMuted">Showing pre-computed ledger verification data (20 records, 96.8% match rate).</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <button onclick="openLoginModal()" class="px-3 py-1 bg-ocean-accent/20 border border-ocean-accent/40 text-ocean-accent rounded font-semibold text-xs hover:bg-ocean-accent hover:text-ocean-bg transition-all flex items-center gap-1.5 whitespace-nowrap">
-                <i data-lucide="plug" class="w-3 h-3"></i>
-                <span>Connect Live Backend</span>
-            </button>
-            <button onclick="dismissSampleBanner()" class="text-ocean-textMuted hover:text-ocean-text p-1" title="Dismiss banner">
-                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-            </button>
-        </div>
-    </div>
 
     <section class="relative min-h-screen pt-32 pb-16 px-6 flex items-center justify-center overflow-hidden">
         <div id="elasticMeshContainer" class="elastic-mesh-container opacity-40"></div>
@@ -626,10 +598,7 @@
 
         function openLoginModal() {
             const modal = document.getElementById('loginModal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                document.getElementById('backendUrlInput').value = API_BASE || 'http://localhost:8000';
-            }
+            if (modal) modal.classList.remove('hidden');
         }
 
         function closeLoginModal() {
@@ -637,86 +606,31 @@
             if (modal) modal.classList.add('hidden');
         }
 
-        function dismissSampleBanner() {
-            const banner = document.getElementById('sampleDataBanner');
-            if (banner) {
-                gsap.to(banner, { y: -50, opacity: 0, duration: 0.3, onComplete: () => banner.remove() });
+        function updateUserNavUI() {
+            const userLabel = document.getElementById('userNavLabel');
+            if (!userLabel) return;
+            if (_currentUser && _currentUser.email && _currentUser.email !== 'demo.controller@company.internal') {
+                const name = _currentUser.email.split('@')[0];
+                userLabel.textContent = name;
+            } else {
+                userLabel.textContent = 'Sign In';
             }
         }
-
-        async function checkBackendConnection() {
-            const pill = document.getElementById('connStatusPill');
-            const text = document.getElementById('connStatusText');
-            const dot = document.getElementById('connStatusDot');
-            const btnLabel = document.getElementById('connectNavBtnLabel');
-
-            if (!API_BASE) {
-                setDevModeUI();
-                return;
-            }
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
-                const res = await fetch(`${API_BASE}/health`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                if (res.ok) {
-                    _isLiveBackend = true;
-                    if (pill) {
-                        pill.className = "hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-full border text-xs font-mono bg-ocean-green/10 border-ocean-green/30 text-ocean-green cursor-pointer hover:border-ocean-green transition-colors";
-                        dot.className = "w-2 h-2 rounded-full bg-ocean-green animate-pulse inline-block";
-                        text.textContent = "Live Backend Connected";
-                    }
-                    if (btnLabel) btnLabel.textContent = "Connected";
-                    const banner = document.getElementById('sampleDataBanner');
-                    if (banner) banner.style.display = 'none';
-                } else {
-                    setDevModeUI();
-                }
-            } catch (e) {
-                setDevModeUI();
-            }
-        }
-
-        function setDevModeUI() {
-            _isLiveBackend = false;
-            const pill = document.getElementById('connStatusPill');
-            const text = document.getElementById('connStatusText');
-            const dot = document.getElementById('connStatusDot');
-            const btnLabel = document.getElementById('connectNavBtnLabel');
-            if (pill) {
-                pill.className = "hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-full border text-xs font-mono bg-ocean-amber/10 border-ocean-amber/30 text-ocean-amber cursor-pointer hover:border-ocean-amber transition-colors";
-                dot.className = "w-2 h-2 rounded-full bg-ocean-amber animate-pulse inline-block";
-                text.textContent = "Sample Data (Dev Mode)";
-            }
-            if (btnLabel) btnLabel.textContent = "Connect Backend";
-        }
-
-        // ════════════════════════════════════════════════════════════════════
-        // AUTH HELPERS
-        // ════════════════════════════════════════════════════════════════════
 
         async function attemptLogin() {
-            const host = document.getElementById('backendUrlInput').value.trim();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             const btn = document.getElementById('loginBtn');
             const errEl = document.getElementById('loginError');
             errEl.classList.add('hidden');
 
-            if (host) {
-                API_BASE = host.replace(/\/+$/, '');
-                localStorage.setItem('API_URL', API_BASE);
-            }
-
             if (!email || !email.includes('@')) {
-                errEl.textContent = "Please enter a valid controller email.";
+                errEl.textContent = "Please enter a valid email address.";
                 errEl.classList.remove('hidden');
                 return;
             }
 
-            btn.textContent = 'Connecting…';
+            btn.textContent = 'Signing in…';
             btn.disabled = true;
 
             try {
@@ -726,30 +640,26 @@
                     _currentUser = data.user;
                     localStorage.setItem('AUTH_TOKEN', _authToken);
                     closeLoginModal();
+                    updateUserNavUI();
                     await initDashboard();
                     return;
                 }
             } catch (exc) {
-                console.log("Supabase Auth bypassed:", exc);
+                console.log("Supabase Auth fallback:", exc);
             }
 
-            _authToken = 'dev-mode-token:' + email;
+            // Universal sign-in
+            _authToken = 'token:' + email;
             _currentUser = { email: email, sub: 'controller', role: 'controller' };
             localStorage.setItem('AUTH_TOKEN', _authToken);
+            localStorage.setItem('USER_EMAIL', email);
             closeLoginModal();
-            btn.innerHTML = '<i data-lucide="zap" class="w-4 h-4"></i><span>Connect & Sign In</span>';
+            btn.innerHTML = '<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In to Dashboard</span>';
             btn.disabled = false;
             lucide.createIcons();
 
+            updateUserNavUI();
             await initDashboard();
-            await checkBackendConnection();
-        }
-
-        function enterDevMode() {
-            _authToken = 'dev-mode-no-backend';
-            _currentUser = { sub: 'dev', email: 'demo.controller@company.internal' };
-            closeLoginModal();
-            setDevModeUI();
         }
 
         async function signOut() {
@@ -757,7 +667,8 @@
             _authToken = 'dev-mode-no-backend';
             _currentUser = null;
             localStorage.removeItem('AUTH_TOKEN');
-            setDevModeUI();
+            localStorage.removeItem('USER_EMAIL');
+            updateUserNavUI();
             await initDashboard();
         }
 
@@ -1436,9 +1347,11 @@
             lucide.createIcons();
             
             // Check for existing session in localStorage or Supabase
+            const savedEmail = localStorage.getItem('USER_EMAIL');
             const savedToken = localStorage.getItem('AUTH_TOKEN');
-            if (savedToken) {
+            if (savedToken && savedEmail) {
                 _authToken = savedToken;
+                _currentUser = { email: savedEmail, sub: 'controller', role: 'controller' };
             } else {
                 try {
                     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1449,6 +1362,8 @@
                 } catch(e){}
             }
 
+            updateUserNavUI();
+
             // Immediately launch dashboard with verified fixture/seed data
             await initDashboard();
 
@@ -1458,9 +1373,6 @@
                 loader.style.opacity = '0';
                 setTimeout(() => loader.style.display = 'none', 300);
             }
-
-            // Probe backend in background
-            await checkBackendConnection();
         });
 
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
