@@ -150,13 +150,10 @@ async def detect_variance_drift(db: AsyncSession) -> List[Anomaly]:
 
     for vendor, row in latest.items():
         history = vendor_history.get(vendor, [])
-        if len(history) < 2:
-            continue  # need at least 2 data points for a meaningful average
-        # Exclude the current record from the baseline average
         current_fee_pct = float(row.fee_amount) / float(row.amount)
         baseline = [h for h in history if abs(h - current_fee_pct) > 1e-9]
-        if not baseline:
-            continue
+        if len(baseline) < 2:
+            continue  # need at least 2 prior data points for a meaningful trailing average
         avg_fee_pct = sum(baseline) / len(baseline)
         drift = abs(current_fee_pct - avg_fee_pct)
 
