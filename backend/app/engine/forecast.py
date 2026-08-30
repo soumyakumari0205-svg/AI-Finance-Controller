@@ -180,7 +180,7 @@ async def compute_what_if(
     return [
         {
             "week_offset": i,
-            "label": WEEK_LABELS[i],
+            "label": _week_start(i).strftime("%b %d"),
             "projected_balance": round(balances[i], 2),
             "height_pct": round(heights[i], 1),
         }

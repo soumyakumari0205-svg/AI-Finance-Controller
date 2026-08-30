@@ -17,7 +17,14 @@ from app.schemas import ForecastBar, ForecastOut, WhatIfRequest
 
 router = APIRouter(prefix="/api/forecast", tags=["forecast"])
 
-WEEK_LABELS = ["Aug 26", "Sep 02", "Sep 09", "Sep 16", "Sep 23", "Sep 30"]
+from datetime import date, timedelta
+from app.config import get_settings
+
+settings = get_settings()
+
+def _current_week_labels(n: int) -> list[str]:
+    today = date.today()
+    return [(today + timedelta(weeks=i)).strftime("%b %d") for i in range(n)]
 
 
 @router.get("", response_model=ForecastOut)
@@ -46,10 +53,13 @@ async def get_forecast(
     balances = [float(r.projected_balance) for r in rows]
     heights = _height_pct(balances)
 
+    n_weeks = min(len(rows), settings.forecast_weeks)
+    week_labels = _current_week_labels(n_weeks)
+
     bars = [
         ForecastBar(
             week_offset=rows[i].week_offset,
-            label=WEEK_LABELS[i] if i < len(WEEK_LABELS) else f"Week {i+1}",
+            label=week_labels[i] if i < len(week_labels) else f"Week {i+1}",
             projected_balance=balances[i],
             height_pct=heights[i],
         )

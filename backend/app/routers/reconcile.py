@@ -70,8 +70,8 @@ async def get_records(
     Returns a flat list of reconciliation records for the frontend table.
     Each row includes the source record's metadata + the match result.
     """
-    # Load matches with their source records
-    stmt = select(ReconciliationMatch).limit(limit).offset(offset)
+    # Load matches with their source records (unpaginated at SQL level)
+    stmt = select(ReconciliationMatch)
     if status:
         try:
             status_enum = MatchStatus(status.lower())
@@ -176,4 +176,5 @@ async def get_records(
             raw_id=str(match.source_a_id),
         ))
 
-    return results
+    # Apply pagination AFTER all filters have been applied
+    return results[offset : offset + limit]
