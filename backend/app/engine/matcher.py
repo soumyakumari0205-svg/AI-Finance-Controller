@@ -91,11 +91,12 @@ def _date_score(d1: date, d2: date, window: int) -> float:
 
 
 def _ref_overlap(ref_a: str, ref_b: str) -> bool:
-    """Returns True if at least one token from ref_a appears in ref_b or vice-versa."""
+    """Returns True if at least one meaningful token from ref_a appears in ref_b or vice-versa."""
     if not ref_a or not ref_b:
         return False
-    tokens_a = set(ref_a.upper().split())
-    tokens_b = set(ref_b.upper().split())
+    import re
+    tokens_a = set(t for t in re.split(r'[^A-Z0-9]+', ref_a.upper()) if len(t) >= 2)
+    tokens_b = set(t for t in re.split(r'[^A-Z0-9]+', ref_b.upper()) if len(t) >= 2)
     return bool(tokens_a & tokens_b)
 
 
