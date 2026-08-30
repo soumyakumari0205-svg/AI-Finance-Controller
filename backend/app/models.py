@@ -12,8 +12,46 @@ from sqlalchemy import (
     BigInteger, Boolean, Column, Date, DateTime, Enum, ForeignKey,
     Integer, Numeric, String, Text, JSON, UniqueConstraint, func
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.orm import relationship
+import uuid
+
+# Platform-independent UUID definition
+class GUID(TypeDecorator):
+    impl = CHAR
+    cache_ok = True
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop("as_uuid", None)
+        super().__init__(*args, **kwargs)
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            from sqlalchemy.dialects.postgresql import UUID as pg_UUID
+            return dialect.type_descriptor(pg_UUID())
+        else:
+            return dialect.type_descriptor(CHAR(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return str(value)
+        else:
+            if isinstance(value, uuid.UUID):
+                return str(value)
+            return value
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        if not isinstance(value, uuid.UUID):
+            return uuid.UUID(value)
+        return value
+
+# Map JSONB to JSON (compiles to JSONB in PG and standard JSON in SQLite)
+JSONB = JSON
+UUID = GUID
 
 from app.database import Base
 
@@ -189,7 +227,7 @@ class AuditLog(Base):
     """
     __tablename__ = "audit_log"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     actor = Column(String(256), nullable=False, default="ai")
     action = Column(String(128), nullable=False)
     entity_type = Column(String(64), nullable=True)

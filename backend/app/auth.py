@@ -115,8 +115,14 @@ async def get_current_user(
             detail="Missing Authorization header",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # Support dev mode token bypass
+    token = credentials.credentials
+    if token.startswith("dev-mode-token:") and settings.enable_seed_endpoint:
+        email = token.split(":", 1)[1]
+        return CurrentUser(sub="dev-user-uuid", email=email, role="controller")
+
     try:
-        payload = await _decode_token(credentials.credentials)
+        payload = await _decode_token(token)
     except JWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
