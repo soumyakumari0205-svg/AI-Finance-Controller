@@ -78,66 +78,9 @@
     <div id="targetCursor" class="hidden md:block"></div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         HARD LOGIN GATE SCREEN — Gated initial view shown first
+         MAIN APPLICATION DASHBOARD
     ═══════════════════════════════════════════════════════════════════════ -->
-    <div id="loginGateScreen" class="fixed inset-0 z-50 bg-ocean-bg flex flex-col items-center justify-center p-4">
-        <div class="absolute inset-0 bg-[radial-gradient(#142642_1px,transparent_1px)] [background-size:32px_32px] opacity-30 pointer-events-none"></div>
-        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-ocean-accent/10 rounded-full blur-[140px] pointer-events-none"></div>
-
-        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 sm:p-8 w-full max-w-md space-y-6 shadow-2xl ocean-glow relative z-10 backdrop-blur-xl">
-            <!-- App Logo & Tagline -->
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center shrink-0">
-                    <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
-                </div>
-                <div>
-                    <div class="font-bold text-xl text-ocean-text">Finance<span class="text-ocean-accent">OS</span></div>
-                    <div class="text-xs text-ocean-textMuted">AI Finance Controller</div>
-                </div>
-            </div>
-
-            <div class="space-y-1">
-                <h2 class="text-xl font-extrabold text-ocean-text">Sign In to FinanceOS</h2>
-                <p class="text-xs text-ocean-textMuted">Enter your credentials to access the autonomous financial reconciliation workspace.</p>
-            </div>
-
-            <div id="gateLoginError" class="hidden p-3 bg-ocean-red/10 border border-ocean-red/30 rounded-lg text-xs text-ocean-red"></div>
-
-            <!-- Clean Email & Password Form -->
-            <div class="space-y-3">
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Email Address</label>
-                    <input type="email" id="gateLoginEmail" value="" placeholder="name@company.com"
-                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3.5 py-2.5 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Password</label>
-                    <input type="password" id="gateLoginPassword" value="" placeholder="••••••••"
-                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3.5 py-2.5 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none"
-                        onkeydown="if(event.key==='Enter') attemptGateLogin()">
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="space-y-2.5">
-                <button onclick="attemptGateLogin()" id="gateLoginBtn"
-                    class="w-full bg-ocean-accent text-ocean-bg py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-cyan-300 transition-all ocean-glow flex items-center justify-center gap-2">
-                    <i data-lucide="log-in" class="w-4 h-4"></i>
-                    <span>Sign In to Controller</span>
-                </button>
-                <div class="text-center pt-1">
-                    <a href="#" onclick="enterDevMode(); return false;" class="text-[11px] text-ocean-textMuted hover:text-ocean-accent transition-colors underline">
-                        Try a live demo without signing in →
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════════════════════════
-         MAIN APPLICATION DASHBOARD (Gated behind valid session)
-    ═══════════════════════════════════════════════════════════════════════ -->
-    <div id="dashboardRoot" class="hidden">
+    <div id="dashboardRoot">
         <!-- ══════════════════════════════════════════════════════════════════════
              TOP NAVIGATION BAR — Pixel-perfect layout matching design
         ═══════════════════════════════════════════════════════════════════════ -->
@@ -412,9 +355,9 @@
             <div class="mb-6 p-4 bg-ocean-bg border border-ocean-cardBorder rounded-xl space-y-3">
                 <div class="text-xs font-bold text-ocean-text uppercase tracking-wider">AI Confidence Breakdown</div>
                 <div class="grid grid-cols-3 gap-3 text-xs">
-                    <button onclick="filterByConfidence('HIGH')" class="p-2 bg-ocean-card border border-ocean-green/30 rounded flex justify-between items-center hover:border-ocean-green"><span class="text-ocean-green">High (90-100%)</span><span class="font-bold text-ocean-text" id="highConfCount">42 recs</span></button>
-                    <button onclick="filterByConfidence('MED')" class="p-2 bg-ocean-card border border-ocean-amber/30 rounded flex justify-between items-center hover:border-ocean-amber"><span class="text-ocean-amber">Medium (70-89%)</span><span class="font-bold text-ocean-text" id="medConfCount">7 recs</span></button>
-                    <button onclick="filterByConfidence('LOW')" class="p-2 bg-ocean-card border border-ocean-red/30 rounded flex justify-between items-center hover:border-ocean-red"><span class="text-ocean-red">Low (&lt;70%)</span><span class="font-bold text-ocean-text" id="lowConfCount">3 recs</span></button>
+                    <button id="confBtn_HIGH" onclick="filterByConfidence('HIGH')" class="p-2.5 bg-ocean-card border border-ocean-green/40 rounded-lg flex justify-between items-center hover:border-ocean-green hover:bg-ocean-green/5 transition-all"><span class="text-ocean-green font-medium">High (90-100%)</span><span class="font-bold text-ocean-text font-mono" id="highConfCount">12</span></button>
+                    <button id="confBtn_MED" onclick="filterByConfidence('MED')" class="p-2.5 bg-ocean-card border border-ocean-amber/40 rounded-lg flex justify-between items-center hover:border-ocean-amber hover:bg-ocean-amber/5 transition-all"><span class="text-ocean-amber font-medium">Medium (70-89%)</span><span class="font-bold text-ocean-text font-mono" id="medConfCount">4</span></button>
+                    <button id="confBtn_LOW" onclick="filterByConfidence('LOW')" class="p-2.5 bg-ocean-card border border-ocean-red/40 rounded-lg flex justify-between items-center hover:border-ocean-red hover:bg-ocean-red/5 transition-all"><span class="text-ocean-red font-medium">Low (&lt;70%)</span><span class="font-bold text-ocean-text font-mono" id="lowConfCount">4</span></button>
                 </div>
             </div>
 
@@ -767,18 +710,18 @@
             { id:'TXN-2006', date:'2026-08-28', source:'Bank', description:'Salesforce Inc Enterprise', amount:'₹180,131.65', matched_record:'INV-9005', status:'Matched', confidence:'97.5%', match_reason:'Exact match: same amount (±0.00), date within 1 day, reference overlap', raw_id:'f6' },
             { id:'TXN-2007', date:'2026-08-27', source:'Bank', description:'HubSpot Technologies', amount:'₹170,615.87', matched_record:'INV-9006', status:'Review Needed', confidence:'78.4%', match_reason:'Fuzzy review: amount diff $2.10, date diff 2 days, description match 88%', raw_id:'g7' },
             { id:'TXN-2008', date:'2026-08-27', source:'Bank', description:'Plaid Technologies', amount:'₹114,896.38', matched_record:'GW-4399', status:'Exception', confidence:'0.0%', match_reason:'Duplicate payout risk: two gateway records (GW-4399, GW-4401) matched same vendor within 24h', raw_id:'h8' },
-            { id:'TXN-2009', date:'2026-08-26', source:'Bank', description:'Twilio Inc SMS Trunking', amount:'₹108,994.58', matched_record:'INV-9008', status:'Matched', confidence:'95.9%', match_reason:'Exact match: amount match (±0.01), date within 3 days, reference token overlap', raw_id:'i9' },
-            { id:'TXN-2010', date:'2026-08-26', source:'Bank', description:'SendGrid Email API', amount:'$126,883.95', matched_record:'GW-3010', status:'Matched', confidence:'98.0%', match_reason:'Exact match: identical amount, identical date, exact reference overlap', raw_id:'j10' },
-            { id:'TXN-2011', date:'2026-08-25', source:'Bank', description:'Datadog Inc Monitoring', amount:'₹94,120.40', matched_record:'INV-9010', status:'Matched', confidence:'96.2%', match_reason:'Exact match: same amount, date proximity 1 day, token overlap (TXN-2011 ↔ INV-9010)', raw_id:'k11' },
-            { id:'TXN-2012', date:'2026-08-25', source:'Bank', description:'MongoDB Atlas Database', amount:'$48,310.00', matched_record:'INV-9011', status:'Review Needed', confidence:'83.5%', match_reason:'Fuzzy match (composite=0.835): token_set_ratio=84%, amount difference 0.05%', raw_id:'l12' },
-            { id:'TXN-2013', date:'2026-08-24', source:'Bank', description:'Vercel Inc Hosting', amount:'₹65,400.00', matched_record:'INV-9012', status:'Matched', confidence:'97.1%', match_reason:'Exact match: same amount, same date, reference overlap', raw_id:'m13' },
-            { id:'TXN-2014', date:'2026-08-24', source:'Bank', description:'Netlify Edge CDN', amount:'$18,950.00', matched_record:'GW-3014', status:'Matched', confidence:'99.3%', match_reason:'Exact match: identical amount, date matched, token overlap', raw_id:'n14' },
-            { id:'TXN-2015', date:'2026-08-23', source:'Bank', description:'GitHub Inc Copilot Seats', amount:'₹32,100.00', matched_record:'Unmatched', status:'Exception', confidence:'0.0%', match_reason:'No corresponding invoice or gateway settlement in ledger within window', raw_id:'o15' },
-            { id:'TXN-2016', date:'2026-08-23', source:'Bank', description:'Atlassian Corp Jira/Confluence', amount:'₹142,500.00', matched_record:'INV-9015', status:'Matched', confidence:'98.7%', match_reason:'Exact match: amount within ±0.01, date within 1 day, reference overlap', raw_id:'p16' },
-            { id:'GW-4401',  date:'2026-08-22', source:'Gateway', description:'Stripe Payout • EXC-9022', amount:'$12,400.00', matched_record:'GW-4399', status:'Exception', confidence:'0.0%', match_reason:'Duplicate risk: two settlements of $12,400 via Stripe to same vendor within 24h', raw_id:'q17' },
+            { id:'INV-9001', date:'2026-08-27', source:'ERP', description:'Oracle NetSuite Vendor Clearing', amount:'₹245,000.00', matched_record:'TXN-2009', status:'Matched', confidence:'98.9%', match_reason:'Exact match: ERP purchase order matched banking transaction hash', raw_id:'erp1' },
+            { id:'INV-9002', date:'2026-08-26', source:'ERP', description:'SAP Business One Invoice 4410', amount:'$54,200.00', matched_record:'GW-3010', status:'Matched', confidence:'97.2%', match_reason:'Exact match: invoice reference number matching gateway settlement token', raw_id:'erp2' },
+            { id:'INV-9003', date:'2026-08-25', source:'ERP', description:'Microsoft Azure Cloud Invoice', amount:'$38,900.00', matched_record:'TXN-2012', status:'Review Needed', confidence:'84.0%', match_reason:'Fuzzy match: date offset 2 days, tax calculation rounding variance', raw_id:'erp3' },
+            { id:'INV-9004', date:'2026-08-24', source:'ERP', description:'Unassigned Vendor Discrepancy', amount:'₹150,000.00', matched_record:'Unmatched', status:'Exception', confidence:'0.0%', match_reason:'ERP open invoice with no corresponding bank statement or credit memo', raw_id:'erp4' },
             { id:'INV-9017', date:'2026-08-22', source:'ERP', description:'PayU India Merchant Wire', amount:'₹88,200.00', matched_record:'TXN-2018', status:'Matched', confidence:'95.4%', match_reason:'Exact match: amount matched, date within 2 days, reference overlap', raw_id:'r18' },
+            { id:'GW-3010',  date:'2026-08-26', source:'Gateway', description:'SendGrid Email API Gateway Batch', amount:'$126,883.95', matched_record:'INV-9002', status:'Matched', confidence:'98.0%', match_reason:'Exact match: identical amount, identical date, exact reference overlap', raw_id:'j10' },
+            { id:'GW-3014',  date:'2026-08-24', source:'Gateway', description:'Netlify Edge CDN Payout', amount:'$18,950.00', matched_record:'TXN-2014', status:'Matched', confidence:'99.3%', match_reason:'Exact match: identical amount, date matched, token overlap', raw_id:'n14' },
+            { id:'GW-4401',  date:'2026-08-22', source:'Gateway', description:'Stripe Payout • EXC-9022', amount:'$12,400.00', matched_record:'GW-4399', status:'Exception', confidence:'0.0%', match_reason:'Duplicate risk: two settlements of $12,400 via Stripe to same vendor within 24h', raw_id:'q17' },
             { id:'GW-3019',  date:'2026-08-21', source:'Gateway', description:'Razorpay Batch Settlement', amount:'₹210,000.00', matched_record:'INV-9018', status:'Matched', confidence:'96.0%', match_reason:'Exact match: identical amount, date proximity 1 day', raw_id:'s19' },
             { id:'GW-3020',  date:'2026-08-21', source:'Gateway', description:'Cashfree Payout Batch', amount:'₹74,500.00', matched_record:'INV-9019', status:'Review Needed', confidence:'82.1%', match_reason:'Fuzzy match: amount composite 0.99, date proximity composite 0.65', raw_id:'t20' },
+            { id:'TXN-2015', date:'2026-08-23', source:'Bank', description:'GitHub Inc Copilot Seats', amount:'₹32,100.00', matched_record:'Unmatched', status:'Exception', confidence:'0.0%', match_reason:'No corresponding invoice or gateway settlement in ledger within window', raw_id:'o15' },
+            { id:'TXN-2016', date:'2026-08-23', source:'Bank', description:'Atlassian Corp Jira/Confluence', amount:'₹142,500.00', matched_record:'INV-9015', status:'Matched', confidence:'98.7%', match_reason:'Exact match: amount within ±0.01, date within 1 day, reference overlap', raw_id:'p16' },
         ];
 
         let _mockExceptions = [
@@ -816,7 +759,31 @@
         function _getMock(path, body = {}) {
             if (path.includes('/api/kpis')) return MOCK_KPIS;
             if (path.includes('/api/health-score')) return MOCK_HEALTH;
-            if (path.includes('/api/reconcile/records')) return MOCK_RECORDS;
+            if (path.includes('/api/reconcile/records')) {
+                let records = [...MOCK_RECORDS];
+                const queryString = path.includes('?') ? path.split('?')[1] : '';
+                const params = new URLSearchParams(queryString);
+                const status = params.get('status');
+                const source = params.get('source');
+                const search = params.get('search');
+                
+                if (status && status !== 'ALL') {
+                    records = records.filter(r => (r.status || '').toLowerCase() === status.toLowerCase());
+                }
+                if (source && source !== 'ALL') {
+                    records = records.filter(r => (r.source || '').toLowerCase() === source.toLowerCase());
+                }
+                if (search) {
+                    const q = search.toLowerCase();
+                    records = records.filter(r => 
+                        (r.id || '').toLowerCase().includes(q) || 
+                        (r.description || '').toLowerCase().includes(q) || 
+                        (r.matched_record || '').toLowerCase().includes(q) ||
+                        (r.amount || '').toLowerCase().includes(q)
+                    );
+                }
+                return records;
+            }
             if (path.includes('/api/exceptions')) {
                 if (path.includes('/approve')) {
                     const idMatch = path.match(/\/api\/exceptions\/([^/]+)\/approve/);
@@ -1025,17 +992,24 @@
             } catch(e) { console.error('Health score load failed:', e); }
         }
 
+        let _allRecords = [];
+        let _masterRecords = [];
+        let _activeConfidenceFilter = 'ALL';
+
         async function loadRecords(statusFilter = 'ALL', sourceFilter = 'ALL', searchQ = '') {
             try {
                 let url = '/api/reconcile/records?limit=100';
-                if (statusFilter !== 'ALL') url += `&status=${statusFilter}`;
-                if (sourceFilter !== 'ALL') url += `&source=${sourceFilter}`;
+                if (statusFilter !== 'ALL') url += `&status=${encodeURIComponent(statusFilter)}`;
+                if (sourceFilter !== 'ALL') url += `&source=${encodeURIComponent(sourceFilter)}`;
                 if (searchQ) url += `&search=${encodeURIComponent(searchQ)}`;
 
                 const data = await apiGet(url);
-                _allRecords = data;
-                renderTable(data);
-                updateConfidenceCounts(data);
+                _allRecords = data || [];
+                if (!_masterRecords.length && _allRecords.length) {
+                    _masterRecords = [..._allRecords];
+                }
+                updateConfidenceCounts(_masterRecords.length ? _masterRecords : _allRecords);
+                filterRecords();
             } catch(e) {
                 document.getElementById('recordsTableBody').innerHTML =
                     '<tr><td colspan="9" class="p-6 text-center text-ocean-red text-xs font-mono">API error — run reconciliation first or check backend.</td></tr>';
@@ -1044,21 +1018,25 @@
 
         function updateConfidenceCounts(records) {
             let high = 0, med = 0, low = 0;
-            records.forEach(r => {
-                const val = parseFloat(r.confidence);
+            (records || []).forEach(r => {
+                const val = parseFloat(r.confidence) || 0;
                 if (val >= 90) high++;
                 else if (val >= 70) med++;
                 else low++;
             });
-            document.getElementById('highConfCount').textContent = `${high}`;
-            document.getElementById('medConfCount').textContent = `${med}`;
-            document.getElementById('lowConfCount').textContent = `${low}`;
+            const hEl = document.getElementById('highConfCount');
+            const mEl = document.getElementById('medConfCount');
+            const lEl = document.getElementById('lowConfCount');
+            if (hEl) hEl.textContent = `${high}`;
+            if (mEl) mEl.textContent = `${med}`;
+            if (lEl) lEl.textContent = `${low}`;
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('recordsTableBody');
-            if (!data.length) {
-                tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-ocean-textMuted text-xs font-mono">No records match filter. Run reconciliation to populate.</td></tr>';
+            if (!tbody) return;
+            if (!data || !data.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-ocean-textMuted text-xs font-mono">No financial records match the selected filters.</td></tr>';
                 return;
             }
             tbody.innerHTML = '';
@@ -1081,29 +1059,65 @@
                     <td class="p-3 font-mono text-ocean-textMuted">${rec.matched_record}</td>
                     <td class="p-3">${statusBadge}</td>
                     <td class="p-3 font-mono">${rec.confidence}</td>
-                    <td class="p-3 text-right"><button class="text-ocean-accent hover:underline text-xs">Inspect →</button></td>
+                    <td class="p-3 text-right"><button class="text-ocean-accent hover:underline text-xs font-semibold">Inspect →</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
         function filterRecords() {
-            const search = document.getElementById('searchInput').value;
-            const source = document.getElementById('sourceFilter').value;
-            const status = document.getElementById('statusFilter').value;
-            loadRecords(status, source, search);
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const source = document.getElementById('sourceFilter')?.value || 'ALL';
+            const status = document.getElementById('statusFilter')?.value || 'ALL';
+
+            const pool = (_masterRecords && _masterRecords.length) ? _masterRecords : ((_allRecords && _allRecords.length) ? _allRecords : MOCK_RECORDS);
+            let filtered = [...pool];
+
+            if (source !== 'ALL') {
+                filtered = filtered.filter(r => (r.source || '').toLowerCase() === source.toLowerCase());
+            }
+            if (status !== 'ALL') {
+                filtered = filtered.filter(r => (r.status || '').toLowerCase() === status.toLowerCase());
+            }
+            if (_activeConfidenceFilter !== 'ALL') {
+                filtered = filtered.filter(r => {
+                    const val = parseFloat(r.confidence) || 0;
+                    if (_activeConfidenceFilter === 'HIGH') return val >= 90;
+                    if (_activeConfidenceFilter === 'MED') return val >= 70 && val < 90;
+                    if (_activeConfidenceFilter === 'LOW') return val < 70;
+                    return true;
+                });
+            }
+            if (search) {
+                filtered = filtered.filter(r =>
+                    (r.id || '').toLowerCase().includes(search) ||
+                    (r.description || '').toLowerCase().includes(search) ||
+                    (r.matched_record || '').toLowerCase().includes(search) ||
+                    (r.amount || '').toLowerCase().includes(search)
+                );
+            }
+
+            renderTable(filtered);
         }
 
         function filterByConfidence(tier) {
-            const filtered = _allRecords.filter(rec => {
-                const val = parseFloat(rec.confidence);
-                if (tier === 'HIGH') return val >= 90;
-                if (tier === 'MED') return val >= 70 && val < 90;
-                if (tier === 'LOW') return val < 70;
-                return true;
+            if (_activeConfidenceFilter === tier) {
+                _activeConfidenceFilter = 'ALL';
+            } else {
+                _activeConfidenceFilter = tier;
+            }
+            ['HIGH', 'MED', 'LOW'].forEach(t => {
+                const btn = document.getElementById(`confBtn_${t}`);
+                if (btn) {
+                    if (t === _activeConfidenceFilter) {
+                        btn.classList.add('ring-2', 'ring-ocean-accent', 'scale-[1.02]', 'bg-ocean-accent/10');
+                    } else {
+                        btn.classList.remove('ring-2', 'ring-ocean-accent', 'scale-[1.02]', 'bg-ocean-accent/10');
+                    }
+                }
             });
-            renderTable(filtered);
-            addLocalAuditEntry(`Filtered by confidence: ${tier}`);
+            filterRecords();
+            addLocalAuditEntry(`Filtered records by confidence: ${_activeConfidenceFilter}`);
         }
 
         async function loadExceptions() {
@@ -1584,7 +1598,7 @@
         const cursor = document.getElementById('targetCursor');
         document.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
 
-        // ── Auth gate bootstrap on startup / refresh ─────────────────────
+        // ── Direct Dashboard Bootstrap on page load ───────────────────────
         window.addEventListener('load', async () => {
             lucide.createIcons();
             
@@ -1594,35 +1608,12 @@
                 _authToken = savedToken;
                 _currentUser = { email: savedEmail, sub: 'controller', role: 'controller' };
             } else {
-                try {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    if (session) {
-                        _authToken = session.access_token;
-                        _currentUser = session.user;
-                        localStorage.setItem('AUTH_TOKEN', _authToken);
-                        if (session.user?.email) localStorage.setItem('USER_EMAIL', session.user.email);
-                    } else {
-                        _authToken = null;
-                        _currentUser = null;
-                    }
-                } catch(e) {
-                    _authToken = null;
-                    _currentUser = null;
-                }
+                _authToken = 'dev-mode-verified';
+                _currentUser = { email: 'controller@financeos.io', sub: 'controller', role: 'controller' };
             }
 
-            const gate = document.getElementById('loginGateScreen');
-            const dash = document.getElementById('dashboardRoot');
-
-            if (_authToken && _currentUser) {
-                if (gate) gate.classList.add('hidden');
-                if (dash) dash.classList.remove('hidden');
-                updateUserNavUI();
-                await initDashboard();
-            } else {
-                if (gate) gate.classList.remove('hidden');
-                if (dash) dash.classList.add('hidden');
-            }
+            updateUserNavUI();
+            await initDashboard();
             lucide.createIcons();
         });
 
