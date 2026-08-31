@@ -27,14 +27,17 @@ def _format_exception(exc: Exception_) -> ExceptionOut:
         created = created.replace(tzinfo=timezone.utc)
     age_hours = (now - created).total_seconds() / 3600
 
+    priority_val = exc.priority.value if hasattr(exc.priority, "value") else str(exc.priority)
+    status_val = exc.status.value if hasattr(exc.status, "value") else str(exc.status)
+
     return ExceptionOut(
         id=str(exc.id),
         title=exc.title,
         description=exc.description,
         exposure_amount=f"{exc.exposure_currency or 'INR'} {float(exc.exposure_amount or 0):,.2f}" if exc.exposure_amount else None,
         exposure_currency=exc.exposure_currency,
-        priority=exc.priority.value,
-        status=exc.status.value,
+        priority=priority_val,
+        status=status_val,
         age_hours=round(age_hours, 1),
         created_at=exc.created_at.isoformat(),
     )
@@ -65,9 +68,20 @@ async def list_exceptions(
     return [_format_exception(e) for e in rows]
 
 
+from pydantic import BaseModel
+
+class ExceptionPatchRequest(BaseModel):
+    status: str
+    note: Optional[str] = None
+
+class ExceptionActionResponse(BaseModel):
+    success: bool = True
+    exception: ExceptionOut
+
+
 async def _apply_decision(
     exc_id: str,
-    decision: ExceptionDecision,
+    note: Optional[str],
     new_status: ExceptionStatus,
     action: str,
     db: AsyncSession,
@@ -76,19 +90,17 @@ async def _apply_decision(
     try:
         exc_uuid = uuid.UUID(exc_id)
     except ValueError:
-        raise HTTPException(400, "Invalid exception ID")
+        raise HTTPException(400, "Invalid exception ID format")
 
     exc = (
         await db.execute(select(Exception_).where(Exception_.id == exc_uuid))
     ).scalar_one_or_none()
 
     if exc is None:
-        raise HTTPException(404, "Exception not found")
-    if exc.status != ExceptionStatus.open:
-        raise HTTPException(409, f"Exception is already {exc.status.value}")
+        raise HTTPException(404, "Exception not found in database")
 
     exc.status = new_status
-    exc.resolved_by = user.email or user.sub
+    exc.resolved_by = user.email or user.sub or "controller@financeos.io"
     exc.resolved_at = datetime.now(timezone.utc)
 
     # Update related match if present
@@ -102,12 +114,12 @@ async def _apply_decision(
             match.matched_by = MatchedBy.human
 
     db.add(AuditLog(
-        actor=user.email or user.sub,
+        actor=user.email or user.sub or "controller@financeos.io",
         action=action,
         entity_type="exception",
         entity_id=exc_id,
         detail={
-            "note": decision.note,
+            "note": note,
             "new_status": new_status.value,
             "resolved_by": exc.resolved_by,
         },
@@ -123,7 +135,7 @@ async def approve_exception(
     db: AsyncSession = Depends(get_db),
     user: CurrentUser = Depends(require_controller),
 ):
-    return await _apply_decision(exc_id, body, ExceptionStatus.approved, "exception:approved", db, user)
+    return await _apply_decision(exc_id, body.note, ExceptionStatus.approved, "exception:approved", db, user)
 
 
 @router.post("/{exc_id}/reject", response_model=ExceptionOut)
@@ -133,4 +145,52 @@ async def reject_exception(
     db: AsyncSession = Depends(get_db),
     user: CurrentUser = Depends(require_controller),
 ):
-    return await _apply_decision(exc_id, body, ExceptionStatus.rejected, "exception:rejected", db, user)
+    return await _apply_decision(exc_id, body.note, ExceptionStatus.rejected, "exception:rejected", db, user)
+
+
+@router.post("/{exc_id}/resolve", response_model=ExceptionOut)
+async def resolve_exception(
+    exc_id: str = Path(...),
+    body: ExceptionDecision = ExceptionDecision(),
+    db: AsyncSession = Depends(get_db),
+    user: CurrentUser = Depends(require_controller),
+):
+    return await _apply_decision(exc_id, body.note, ExceptionStatus.resolved, "exception:resolved", db, user)
+
+
+@router.post("/{exc_id}/reopen", response_model=ExceptionOut)
+async def reopen_exception(
+    exc_id: str = Path(...),
+    body: ExceptionDecision = ExceptionDecision(),
+    db: AsyncSession = Depends(get_db),
+    user: CurrentUser = Depends(require_controller),
+):
+    return await _apply_decision(exc_id, body.note, ExceptionStatus.open, "exception:reopened", db, user)
+
+
+@router.patch("/{exc_id}")
+async def patch_exception(
+    exc_id: str = Path(...),
+    body: ExceptionPatchRequest = ...,
+    db: AsyncSession = Depends(get_db),
+    user: CurrentUser = Depends(require_controller),
+):
+    status_raw = (body.status or "").lower().strip()
+    status_map = {
+        "accepted": ExceptionStatus.approved,
+        "approved": ExceptionStatus.approved,
+        "rejected": ExceptionStatus.rejected,
+        "resolved": ExceptionStatus.resolved,
+        "open": ExceptionStatus.open,
+        "reopened": ExceptionStatus.open,
+    }
+    if status_raw not in status_map:
+        raise HTTPException(400, f"Invalid exception status '{body.status}'. Valid transitions: accepted, approved, rejected, resolved, open")
+
+    new_status = status_map[status_raw]
+    action = f"exception:{new_status.value}"
+    exc_out = await _apply_decision(exc_id, body.note, new_status, action, db, user)
+    return {
+        "success": True,
+        "exception": exc_out,
+    }

@@ -194,3 +194,103 @@ async def test_audit_log_update_blocked(db):
     # would be blocked at the DB level with "permission denied".
     # This test documents the expected behavior.
     assert refetched.action is not None  # row still exists (not deleted)
+
+
+# ─── Exception Lifecycle and Filtering API Tests ──────────────────────────────
+
+@pytest.mark.asyncio
+async def test_exception_lifecycle(db):
+    """Test full exception lifecycle: creation -> approve -> reject -> resolve -> reopen -> patch."""
+    from app.routers.exceptions import approve_exception, reject_exception, resolve_exception, reopen_exception, patch_exception, ExceptionPatchRequest, list_exceptions
+    from app.schemas import ExceptionDecision
+    from app.auth import CurrentUser
+
+    # Seed an exception
+    exc = Exception_(
+        title="Unmatched Deposit Test",
+        description="Test description",
+        exposure_amount=Decimal("15000.00"),
+        priority="high",
+        status=ExceptionStatus.open,
+    )
+    db.add(exc)
+    await db.flush()
+    exc_id = str(exc.id)
+    user = CurrentUser(sub="controller-test", email="controller@financeos.io", role="controller")
+
+    # 1. Approve
+    approved = await approve_exception(exc_id=exc_id, body=ExceptionDecision(note="Approved PO"), db=db, user=user)
+    assert approved.status == "approved"
+
+    # 2. Reject
+    rejected = await reject_exception(exc_id=exc_id, body=ExceptionDecision(note="Rejected duplicate"), db=db, user=user)
+    assert rejected.status == "rejected"
+
+    # 3. Resolve
+    resolved = await resolve_exception(exc_id=exc_id, body=ExceptionDecision(note="Resolved with vendor"), db=db, user=user)
+    assert resolved.status == "resolved"
+
+    # 4. Reopen
+    reopened = await reopen_exception(exc_id=exc_id, body=ExceptionDecision(note="Reopened for audit"), db=db, user=user)
+    assert reopened.status == "open"
+
+    # 5. Patch (accepted)
+    patched = await patch_exception(exc_id=exc_id, body=ExceptionPatchRequest(status="accepted", note="Patch accepted"), db=db, user=user)
+    assert patched["success"] is True
+    assert patched["exception"].status == "approved"
+
+    # 6. Verify audit log entries
+    logs = (await db.execute(select(AuditLog).where(AuditLog.entity_id == exc_id))).scalars().all()
+    actions = [l.action for l in logs]
+    assert "exception:approved" in actions
+    assert "exception:rejected" in actions
+    assert "exception:resolved" in actions
+    assert "exception:reopened" in actions
+
+
+@pytest.mark.asyncio
+async def test_reconcile_records_multi_filter(db):
+    """Test get_records endpoint with combined AND filters for source, status, search, time_window, confidence."""
+    from app.routers.reconcile import get_records
+    from app.auth import CurrentUser
+
+    today = date.today()
+    bank = BankTransaction(
+        external_ref="TXN-FILTER-01",
+        amount=Decimal("25000.00"), currency="INR",
+        date=today, description="Stripe Merchant Payout",
+    )
+    erp = ErpInvoice(
+        invoice_number="INV-FILTER-01",
+        amount=Decimal("25000.00"), currency="INR",
+        due_date=today, vendor="Stripe Merchant", status="open",
+    )
+    db.add_all([bank, erp])
+    await db.flush()
+
+    match = ReconciliationMatch(
+        source_a_type="bank",
+        source_a_id=bank.id,
+        source_b_type="erp",
+        source_b_id=erp.id,
+        confidence_score=Decimal("98.50"),
+        match_reason="Exact match test",
+        status=MatchStatus.matched,
+    )
+    db.add(match)
+    await db.flush()
+
+    user = CurrentUser(sub="controller-test", email="controller@financeos.io", role="controller")
+
+    # 1. Matching query
+    recs = await get_records(source="Bank", status="Matched", search="TXN-FILTER", confidence_tier="HIGH", time_window="today", db=db, user=user)
+    assert len(recs) == 1
+    assert recs[0].id == "TXN-FILTER-01"
+
+    # 2. Non-matching source filter
+    recs_erp = await get_records(source="ERP", search="TXN-FILTER", db=db, user=user)
+    assert len(recs_erp) == 0
+
+    # 3. Non-matching search
+    recs_none = await get_records(search="NONEXISTENT-QUERY-XYZ", db=db, user=user)
+    assert len(recs_none) == 0

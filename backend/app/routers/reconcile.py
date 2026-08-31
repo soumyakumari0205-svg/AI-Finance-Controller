@@ -4,7 +4,7 @@ GET  /api/reconcile/records — Paginated, filterable records for the frontend t
 """
 from __future__ import annotations
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func, or_, and_
@@ -56,11 +56,26 @@ async def trigger_reconciliation(
     )
 
 
+from datetime import date, timedelta
+
+def _clean_param(val: Any) -> Optional[str]:
+    if val is None:
+        return None
+    if hasattr(val, "default"):
+        val = val.default
+    if isinstance(val, str):
+        s = val.strip()
+        return s if s else None
+    return str(val) if val is not None else None
+
+
 @router.get("/records", response_model=List[ReconciliationRecord])
 async def get_records(
-    status: Optional[str] = Query(None, description="matched|review|exception"),
-    source: Optional[str] = Query(None, description="bank|erp|gateway"),
+    status: Optional[str] = Query(None, description="matched|review|exception|all"),
+    source: Optional[str] = Query(None, description="bank|erp|gateway|all"),
     search: Optional[str] = Query(None),
+    time_window: Optional[str] = Query(None, description="past_30|today|next_7|next_30|all"),
+    confidence_tier: Optional[str] = Query(None, description="high|med|low|all"),
     limit: int = Query(100, le=500),
     offset: int = Query(0),
     db: AsyncSession = Depends(get_db),
@@ -68,24 +83,25 @@ async def get_records(
 ):
     """
     Returns a flat list of reconciliation records for the frontend table.
-    Each row includes the source record's metadata + the match result.
+    Applies comprehensive AND filtering across search, source, status, time_window, and confidence_tier.
     """
-    # Load matches with their source records (unpaginated at SQL level)
-    stmt = select(ReconciliationMatch)
-    if status:
-        try:
-            status_enum = MatchStatus(status.lower())
-            stmt = stmt.where(ReconciliationMatch.status == status_enum)
-        except ValueError:
-            pass
+    # Clean parameters
+    c_status = _clean_param(status)
+    c_source = _clean_param(source)
+    c_search = _clean_param(search)
+    c_time_window = _clean_param(time_window)
+    c_confidence = _clean_param(confidence_tier)
 
+    # Load all matches
+    stmt = select(ReconciliationMatch).order_by(ReconciliationMatch.matched_at.desc())
     matches = (await db.execute(stmt)).scalars().all()
 
+    today = date.today()
     results: List[ReconciliationRecord] = []
 
     for match in matches:
         # Load source A record
-        src_type = match.source_a_type
+        src_type = (match.source_a_type or "").lower()
         if src_type == "bank":
             src = (await db.execute(
                 select(BankTransaction).where(BankTransaction.id == match.source_a_id)
@@ -122,22 +138,63 @@ async def get_records(
         else:
             continue
 
-        # Apply search filter
-        if search:
-            q = search.lower()
-            if q not in ref.lower() and q not in description.lower():
-                continue
-
-        # Apply source filter
-        if source and src_type != source.lower():
-            continue
-
-        # Map status to display string
+        # Map status to canonical string
         status_map = {
             MatchStatus.matched: "Matched",
             MatchStatus.review: "Review Needed",
             MatchStatus.exception: "Exception",
         }
+        status_display = status_map.get(match.status, match.status.value)
+
+        # 1. Source filter
+        if c_source and c_source.lower() != "all":
+            if src_type != c_source.lower():
+                continue
+
+        # 2. Status filter
+        if c_status and c_status.lower() != "all":
+            st_clean = c_status.lower()
+            if st_clean in ("matched", "match") and match.status != MatchStatus.matched:
+                continue
+            elif st_clean in ("review", "review needed", "review_needed") and match.status != MatchStatus.review:
+                continue
+            elif st_clean in ("exception", "unmatched") and match.status != MatchStatus.exception:
+                continue
+
+        # 3. Confidence tier filter
+        conf_val = float(match.confidence_score or 0)
+        if c_confidence and c_confidence.lower() != "all":
+            tier = c_confidence.lower()
+            if tier == "high" and conf_val < 90:
+                continue
+            elif tier == "med" and (conf_val < 70 or conf_val >= 90):
+                continue
+            elif tier == "low" and conf_val >= 70:
+                continue
+
+        # 4. Time window / Date filter
+        if c_time_window and c_time_window.lower() != "all":
+            tw = c_time_window.lower()
+            if isinstance(src_date, str):
+                try:
+                    src_date_obj = date.fromisoformat(src_date)
+                except ValueError:
+                    src_date_obj = today
+            else:
+                src_date_obj = src_date
+
+            if tw in ("today", "1"):
+                if abs((src_date_obj - today).days) > 2:
+                    continue
+            elif tw in ("past_30", "0"):
+                if not (today - timedelta(days=30) <= src_date_obj <= today + timedelta(days=1)):
+                    continue
+            elif tw in ("next_7", "2"):
+                if not (today <= src_date_obj <= today + timedelta(days=7)):
+                    continue
+            elif tw in ("next_30", "3"):
+                if not (today <= src_date_obj <= today + timedelta(days=30)):
+                    continue
 
         # Format amount
         if currency == "INR":
@@ -163,6 +220,20 @@ async def get_records(
             else:
                 matched_label = str(match.source_b_id)[:8]
 
+        # 5. Search filter across all key textual & numerical fields
+        if search and search.strip():
+            q = search.strip().lower()
+            matches_q = (
+                q in ref.lower() or
+                q in description.lower() or
+                q in matched_label.lower() or
+                q in amount_str.lower() or
+                q in status_display.lower() or
+                q in src_type.lower()
+            )
+            if not matches_q:
+                continue
+
         results.append(ReconciliationRecord(
             id=ref,
             date=str(src_date),
@@ -170,11 +241,13 @@ async def get_records(
             description=description,
             amount=amount_str,
             matched_record=matched_label,
-            status=status_map.get(match.status, match.status.value),
-            confidence=f"{float(match.confidence_score):.1f}%",
+            status=status_display,
+            confidence=f"{conf_val:.1f}%",
             match_reason=match.match_reason,
             raw_id=str(match.source_a_id),
         ))
 
     # Apply pagination AFTER all filters have been applied
-    return results[offset : offset + limit]
+    limit_val = int(limit.default if hasattr(limit, "default") else limit)
+    offset_val = int(offset.default if hasattr(offset, "default") else offset)
+    return results[offset_val : offset_val + limit_val]

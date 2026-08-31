@@ -336,6 +336,10 @@
                             <option value="Review Needed">🟡 Review Needed</option>
                             <option value="Exception">🔴 Exception</option>
                         </select>
+                        <button onclick="resetFilters()" class="px-2.5 py-1.5 bg-ocean-card hover:bg-ocean-accent/10 border border-ocean-cardBorder hover:border-ocean-accent/40 text-ocean-textMuted hover:text-ocean-text rounded-lg text-xs font-medium transition-all flex items-center gap-1" title="Reset All Filters">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            <span>Reset</span>
+                        </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto border border-ocean-cardBorder rounded-xl max-h-[380px] overflow-y-auto">
@@ -517,7 +521,7 @@
         // ════════════════════════════════════════════════════════════════════
         // CONFIGURATION & STATE
         // ════════════════════════════════════════════════════════════════════
-        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : '';
+        const API_BASE = window.FINANCE_OS_API_URL || (localStorage.getItem('FINANCE_API_BASE') || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : ''));
 
         function refreshSession() {
             showToast('Reconciliation state refreshed.');
@@ -575,7 +579,7 @@
             {week_offset:0,label:'Week 1',projected_balance:124000,height_pct:52},
             {week_offset:1,label:'Week 2',projected_balance:187000,height_pct:72},
             {week_offset:2,label:'Week 3',projected_balance:145000,height_pct:60},
-            {week_offset:3,label:'Week 4',projected_balance:210000,height_pct:84},
+            {week_offset:4,label:'Week 4',projected_balance:210000,height_pct:84},
             {week_offset:4,label:'Week 5',projected_balance:165000,height_pct:67},
             {week_offset:5,label:'Week 6',projected_balance:238000,height_pct:93},
         ]};
@@ -642,15 +646,19 @@
             if (!API_BASE) return _getMock(path);
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
                 const res = await fetch(`${API_BASE}${path}`, {
                     headers: { 'Content-Type': 'application/json' },
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.detail || `API ${path} → ${res.status}`);
+                }
                 return await res.json();
             } catch (err) {
+                if (API_BASE && window.location.hostname === 'localhost') throw err;
                 return _getMock(path);
             }
         }
@@ -659,7 +667,7 @@
             if (!API_BASE) return _getMock(path, body);
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
                 const res = await fetch(`${API_BASE}${path}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -667,9 +675,36 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.detail || `API ${path} → ${res.status}`);
+                }
                 return await res.json();
             } catch (err) {
+                if (API_BASE && window.location.hostname === 'localhost') throw err;
+                return _getMock(path, body);
+            }
+        }
+
+        async function apiPatch(path, body = {}) {
+            if (!API_BASE) return _getMock(path, body);
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const res = await fetch(`${API_BASE}${path}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.detail || `API ${path} → ${res.status}`);
+                }
+                return await res.json();
+            } catch (err) {
+                if (API_BASE && window.location.hostname === 'localhost') throw err;
                 return _getMock(path, body);
             }
         }
@@ -679,6 +714,7 @@
         // ════════════════════════════════════════════════════════════════════
         let _masterRecords = [];
         let _activeConfidenceFilter = 'ALL';
+        let _activeTimeWindow = 'all';
 
         async function initDashboard() {
             // Hide loading screen
@@ -736,7 +772,9 @@
                 const reconRisk = 100 - data.match_rate;
                 setRiskBar('riskReconPct', 'riskReconBar', reconRisk.toFixed(1), reconRisk > 10 ? 'ocean-amber' : 'ocean-green');
                 setRiskBar('riskExcPct', 'riskExcBar', excRisk.toFixed(1), excRisk > 5 ? 'ocean-red' : 'ocean-green');
-            } catch(e) { console.error('KPI load failed:', e); }
+            } catch(e) {
+                console.error('KPI load failed:', e);
+            }
         }
 
         function setRiskBar(pctId, barId, pct, color) {
@@ -770,7 +808,9 @@
                     const qualRisk = 100 - data.quality_score * 100;
                     setRiskBar('riskQualPct', 'riskQualBar', qualRisk.toFixed(1), qualRisk > 5 ? 'ocean-amber' : 'ocean-accent');
                 }
-            } catch(e) { console.error('Health score load failed:', e); }
+            } catch(e) {
+                console.error('Health score load failed:', e);
+            }
         }
 
         async function loadRecords() {
@@ -845,30 +885,44 @@
             const status = (statusEl ? statusEl.value : 'ALL').trim();
 
             const pool = (_masterRecords && _masterRecords.length > 0) ? _masterRecords : MOCK_RECORDS;
+            const refDate = new Date('2026-08-30');
             
             const filtered = pool.filter(r => {
-                // Match Source
+                // 1. Match Source
                 if (source !== 'ALL' && (r.source || '').toLowerCase() !== source.toLowerCase()) {
                     return false;
                 }
-                // Match Status
+                // 2. Match Status
                 if (status !== 'ALL' && (r.status || '').toLowerCase() !== status.toLowerCase()) {
                     return false;
                 }
-                // Match Confidence Tier
+                // 3. Match Confidence Tier
                 if (_activeConfidenceFilter !== 'ALL') {
                     const val = parseFloat(r.confidence) || 0;
                     if (_activeConfidenceFilter === 'HIGH' && val < 90) return false;
                     if (_activeConfidenceFilter === 'MED' && (val < 70 || val >= 90)) return false;
                     if (_activeConfidenceFilter === 'LOW' && val >= 70) return false;
                 }
-                // Match Search
+                // 4. Match Time Window
+                if (_activeTimeWindow && _activeTimeWindow !== 'all') {
+                    const recDate = new Date(r.date);
+                    if (!isNaN(recDate.getTime())) {
+                        const diffDays = Math.round((recDate.getTime() - refDate.getTime()) / (1000 * 3600 * 24));
+                        if (_activeTimeWindow === 'today' && Math.abs(diffDays) > 2) return false;
+                        if (_activeTimeWindow === 'past_30' && (diffDays < -30 || diffDays > 1)) return false;
+                        if (_activeTimeWindow === 'next_7' && (diffDays < 0 || diffDays > 7)) return false;
+                        if (_activeTimeWindow === 'next_30' && (diffDays < 0 || diffDays > 30)) return false;
+                    }
+                }
+                // 5. Match Search (combined AND logic)
                 if (search) {
                     const idMatch = (r.id || '').toLowerCase().includes(search);
                     const descMatch = (r.description || '').toLowerCase().includes(search);
                     const recMatch = (r.matched_record || '').toLowerCase().includes(search);
                     const amtMatch = (r.amount || '').toLowerCase().includes(search);
-                    if (!idMatch && !descMatch && !recMatch && !amtMatch) return false;
+                    const statusMatch = (r.status || '').toLowerCase().includes(search);
+                    const srcMatch = (r.source || '').toLowerCase().includes(search);
+                    if (!idMatch && !descMatch && !recMatch && !amtMatch && !statusMatch && !srcMatch) return false;
                 }
                 return true;
             });
@@ -896,13 +950,40 @@
             addLocalAuditEntry(`Filtered records by confidence: ${_activeConfidenceFilter}`);
         }
 
+        function resetFilters() {
+            const searchEl = document.getElementById('searchInput');
+            const sourceEl = document.getElementById('sourceFilter');
+            const statusEl = document.getElementById('statusFilter');
+            const sliderEl = document.getElementById('timeTravelSlider');
+            const lbl = document.getElementById('timeTravelLabel');
+
+            if (searchEl) searchEl.value = '';
+            if (sourceEl) sourceEl.value = 'ALL';
+            if (statusEl) statusEl.value = 'ALL';
+            _activeConfidenceFilter = 'ALL';
+            _activeTimeWindow = 'all';
+            if (sliderEl) sliderEl.value = 1;
+            if (lbl) lbl.textContent = 'State: TODAY';
+
+            ['HIGH', 'MED', 'LOW'].forEach(t => {
+                const btn = document.getElementById(`confBtn_${t}`);
+                if (btn) {
+                    btn.classList.remove('ring-2', 'ring-ocean-accent', 'scale-[1.02]', 'bg-ocean-accent/10');
+                }
+            });
+
+            filterRecords();
+            showToast('All filters cleared.');
+            addLocalAuditEntry('Cleared all record filters.');
+        }
+
         async function loadExceptions() {
+            const container = document.getElementById('priorityExceptionsContainer');
+            if (!container) return;
             try {
-                const data = await apiGet('/api/exceptions?status=open&limit=6');
-                const container = document.getElementById('priorityExceptionsContainer');
-                if (!container) return;
+                const data = await apiGet('/api/exceptions?status=open&limit=10');
                 if (!data || !data.length) {
-                    container.innerHTML = '<div class="p-6 border border-ocean-green/30 bg-ocean-green/5 rounded-xl text-center text-ocean-green text-xs font-mono col-span-1 lg:col-span-2 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i><span>All priority exceptions resolved. Queue clear.</span></div>';
+                    container.innerHTML = '<div class="p-6 border border-ocean-green/30 bg-ocean-green/5 rounded-xl text-center text-ocean-green text-xs font-mono col-span-1 lg:col-span-2 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i><span>No open exceptions. All records reconciled.</span></div>';
                     lucide.createIcons();
                     return;
                 }
@@ -935,11 +1016,15 @@
                     container.appendChild(excEl);
                 });
                 lucide.createIcons();
-            } catch(e) { console.error('Exceptions load failed:', e); }
+            } catch(e) {
+                console.error('Exceptions load failed:', e);
+                container.innerHTML = `<div class="p-6 border border-ocean-red/30 bg-ocean-red/5 rounded-xl text-center text-ocean-red text-xs font-mono col-span-1 lg:col-span-2">Unable to load exceptions from API. <button onclick="loadExceptions()" class="underline font-bold ml-1">Retry</button></div>`;
+            }
         }
 
         async function approveException(id, btn) {
             const card = btn ? btn.closest('.bg-ocean-bg') : document.getElementById(`exc-card-${id}`);
+            const originalContent = btn ? btn.innerHTML : '';
             if (btn) {
                 btn.innerHTML = '<span class="animate-pulse">Approving…</span>';
                 btn.disabled = true;
@@ -967,12 +1052,18 @@
                 }
                 addLocalAuditEntry(`Exception ${id} APPROVED & RESOLVED`);
             } catch(e) {
-                console.error(e);
+                console.error('Approval failed:', e);
+                if (btn) {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                }
+                showToast(`Approval failed: ${e.message || 'Database error'}`);
             }
         }
 
         async function rejectException(id, btn) {
             const card = btn ? btn.closest('.bg-ocean-bg') : document.getElementById(`exc-card-${id}`);
+            const originalContent = btn ? btn.innerHTML : '';
             if (btn) {
                 btn.innerHTML = '<span class="animate-pulse">Rejecting…</span>';
                 btn.disabled = true;
@@ -999,7 +1090,12 @@
                 }
                 addLocalAuditEntry(`Exception ${id} REJECTED`);
             } catch(e) {
-                console.error(e);
+                console.error('Rejection failed:', e);
+                if (btn) {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                }
+                showToast(`Rejection failed: ${e.message || 'Database error'}`);
             }
         }
 
@@ -1256,10 +1352,15 @@
         }
         function handleTimeTravel(val) {
             const states = ['Past 30 Days', 'TODAY', 'Next 7 Days', 'Next 30 Days'];
-            document.getElementById('timeTravelLabel').textContent = `State: ${states[val]}`;
-            addLocalAuditEntry(`Time travel view: ${states[val]}`);
+            const keys = ['past_30', 'today', 'next_7', 'next_30'];
+            const idx = parseInt(val) || 0;
+            _activeTimeWindow = keys[idx] || 'all';
+            const lbl = document.getElementById('timeTravelLabel');
+            if (lbl) lbl.textContent = `State: ${states[idx]}`;
+            filterRecords();
+            addLocalAuditEntry(`Time travel view: ${states[idx]}`);
         }
-        function openOnboardingTour() { alert('FINANCER OS TOUR\n\n1. Sign in → dashboard loads real data from API\n2. Click "Run AI Reconciliation" → engine matches bank/ERP/gateway records\n3. Review exceptions → approve/reject with controller role\n4. Move what-if sliders → forecast recomputes server-side\n5. Check audit log → every action is immutably logged'); }
+        function openOnboardingTour() { alert('AI FINANCE CONTROLLER OS TOUR\n\n1. Real Data Ingestion → Connects Bank, ERP, and Gateway streams\n2. AI Reconciliation Engine → Multi-pass exact and fuzzy matching with composite confidence scoring\n3. Priority Exception Command Center → Review, approve, and reject unallocated items with full audit trail\n4. Cash Forecast & What-If Simulator → Dynamic liquidity modeling with real backend recomputation\n5. Immutable Audit Trail → Every transaction, decision, and anomaly is permanently recorded'); }
 
         // ── Keyboard shortcuts ────────────────────────────────────────────
         document.addEventListener('keydown', e => {
