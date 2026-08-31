@@ -170,15 +170,7 @@
             </div>
         </nav>
 
-        <!-- ══════════════════════════════════════════════════════════════════════
-             CONTROLLER SESSION BADGE
-        ═══════════════════════════════════════════════════════════════════════ -->
-        <div id="controllerSessionBadge" class="relative pt-24 pb-2 z-30 flex justify-center">
-            <div class="bg-ocean-green/20 border border-ocean-green/50 text-ocean-green text-xs font-mono px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md">
-                <span class="w-2 h-2 rounded-full bg-ocean-green animate-pulse inline-block"></span>
-                <span id="controllerEmailDisplay">LOGGED IN AS CONTROLLER (soumyakumari0205@gmail.com)</span>
-            </div>
-        </div>
+
 
     <section class="relative min-h-screen pt-32 pb-16 px-6 flex items-center justify-center overflow-hidden">
         <div id="elasticMeshContainer" class="elastic-mesh-container opacity-40"></div>
@@ -733,49 +725,37 @@
         }
 
         async function apiGet(path) {
-            if (_devMode() || !API_BASE) return _getMock(path);
+            if (!API_BASE) return _getMock(path);
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
                 const res = await fetch(`${API_BASE}${path}`, {
-                    headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json' },
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (res.status === 401) {
-                    signOut();
-                    throw new Error('Session expired (401)');
-                }
                 if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
                 return await res.json();
             } catch (err) {
-                if (err.message && err.message.includes('401')) throw err;
-                setDevModeUI();
                 return _getMock(path);
             }
         }
 
         async function apiPost(path, body = {}) {
-            if (_devMode() || !API_BASE) return _getMock(path, body);
+            if (!API_BASE) return _getMock(path, body);
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
                 const res = await fetch(`${API_BASE}${path}`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (res.status === 401) {
-                    signOut();
-                    throw new Error('Session expired (401)');
-                }
                 if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
                 return await res.json();
             } catch (err) {
-                if (err.message && err.message.includes('401')) throw err;
-                setDevModeUI();
                 return _getMock(path, body);
             }
         }
@@ -1488,18 +1468,6 @@
         // ── Direct Dashboard Bootstrap on page load ───────────────────────
         window.addEventListener('load', async () => {
             lucide.createIcons();
-            
-            const savedEmail = localStorage.getItem('USER_EMAIL');
-            const savedToken = localStorage.getItem('AUTH_TOKEN');
-            if (savedToken && savedEmail) {
-                _authToken = savedToken;
-                _currentUser = { email: savedEmail, sub: 'controller', role: 'controller' };
-            } else {
-                _authToken = 'dev-mode-verified';
-                _currentUser = { email: 'controller@financeos.io', sub: 'controller', role: 'controller' };
-            }
-
-            updateUserNavUI();
             await initDashboard();
             lucide.createIcons();
         });
