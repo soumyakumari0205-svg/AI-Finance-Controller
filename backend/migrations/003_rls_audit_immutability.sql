@@ -14,9 +14,12 @@ DO $$
 DECLARE
     app_pwd text;
 BEGIN
-    app_pwd := COALESCE(current_setting('app.finance_app_password', true), 'finance_app_pass');
+    app_pwd := current_setting('app.finance_app_password', true);
+    IF app_pwd IS NULL OR app_pwd = '' THEN
+        RAISE EXCEPTION 'Configuration setting app.finance_app_password is not set or empty';
+    END IF;
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'finance_app') THEN
-        EXECUTE format('CREATE ROLE finance_app LOGIN PASSWORD %L', app_pwd);
+        EXECUTE format('CREATE ROLE finance_app WITH LOGIN PASSWORD %L', app_pwd);
     ELSE
         EXECUTE format('ALTER ROLE finance_app WITH PASSWORD %L', app_pwd);
     END IF;

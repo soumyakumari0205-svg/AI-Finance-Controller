@@ -78,145 +78,169 @@
     <div id="targetCursor" class="hidden md:block"></div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         SIGN IN PAGE / MODAL — High-Tech, Clean, Universal
+         HARD LOGIN GATE SCREEN — Gated initial view shown first
     ═══════════════════════════════════════════════════════════════════════ -->
-    <div id="loginModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex items-center justify-center p-4">
-        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 sm:p-8 w-full max-w-md space-y-6 shadow-2xl ocean-glow relative">
-            <button onclick="closeLoginModal()" class="absolute top-5 right-5 text-ocean-textMuted hover:text-ocean-text p-1" title="Close">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
+    <div id="loginGateScreen" class="fixed inset-0 z-50 bg-ocean-bg flex flex-col items-center justify-center p-4">
+        <div class="absolute inset-0 bg-[radial-gradient(#142642_1px,transparent_1px)] [background-size:32px_32px] opacity-30 pointer-events-none"></div>
+        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-ocean-accent/10 rounded-full blur-[140px] pointer-events-none"></div>
 
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 sm:p-8 w-full max-w-md space-y-6 shadow-2xl ocean-glow relative z-10 backdrop-blur-xl">
+            <!-- App Logo & Tagline -->
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center shrink-0">
                     <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
                 </div>
                 <div>
-                    <div class="font-bold text-lg text-ocean-text">Finance<span class="text-ocean-accent">OS</span></div>
+                    <div class="font-bold text-xl text-ocean-text">Finance<span class="text-ocean-accent">OS</span></div>
                     <div class="text-xs text-ocean-textMuted">AI Finance Controller</div>
                 </div>
             </div>
 
             <div class="space-y-1">
                 <h2 class="text-xl font-extrabold text-ocean-text">Sign In to FinanceOS</h2>
-                <p class="text-xs text-ocean-textMuted">Enter your controller credentials to access autonomous reconciliation, ledger matching, and cash forecasting.</p>
+                <p class="text-xs text-ocean-textMuted">Enter your credentials to access the autonomous financial reconciliation workspace.</p>
             </div>
 
-            <div id="loginError" class="hidden p-3 bg-ocean-red/10 border border-ocean-red/30 rounded-lg text-xs text-ocean-red"></div>
+            <div id="gateLoginError" class="hidden p-3 bg-ocean-red/10 border border-ocean-red/30 rounded-lg text-xs text-ocean-red"></div>
 
+            <!-- Clean Email & Password Form -->
             <div class="space-y-3">
                 <div class="space-y-1">
                     <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Email Address</label>
-                    <input type="email" id="loginEmail" value="soumyakumari0205@gmail.com" placeholder="user@company.com"
+                    <input type="email" id="gateLoginEmail" value="" placeholder="name@company.com"
                         class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3.5 py-2.5 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none">
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Password</label>
-                    <input type="password" id="loginPassword" value="••••••••" placeholder="••••••••"
+                    <input type="password" id="gateLoginPassword" value="" placeholder="••••••••"
                         class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3.5 py-2.5 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none"
-                        onkeydown="if(event.key==='Enter') attemptLogin()">
+                        onkeydown="if(event.key==='Enter') attemptGateLogin()">
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <button onclick="attemptLogin()" id="loginBtn"
+            <!-- Actions -->
+            <div class="space-y-2.5">
+                <button onclick="attemptGateLogin()" id="gateLoginBtn"
                     class="w-full bg-ocean-accent text-ocean-bg py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-cyan-300 transition-all ocean-glow flex items-center justify-center gap-2">
                     <i data-lucide="log-in" class="w-4 h-4"></i>
-                    <span>Sign In to Dashboard</span>
+                    <span>Sign In to Controller</span>
                 </button>
+                <div class="text-center pt-1">
+                    <a href="#" onclick="enterDevMode(); return false;" class="text-[11px] text-ocean-textMuted hover:text-ocean-accent transition-colors underline">
+                        Try a live demo without signing in →
+                    </a>
+                </div>
             </div>
-            <p class="text-center text-[11px] text-ocean-textMuted font-mono">Authenticated role: <span class="text-ocean-green font-bold">Controller</span></p>
-        </div>
-    </div>
-
-    <div id="loadingScreen" class="fixed inset-0 z-[100] bg-ocean-bg flex flex-col items-center justify-center space-y-6 transition-opacity duration-700">
-        <div class="relative w-24 h-24 flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full border-2 border-ocean-accent/20 border-t-ocean-accent animate-spin"></div>
-            <div class="w-12 h-12 rounded-lg bg-ocean-accent/10 border border-ocean-accent flex items-center justify-center">
-                <i data-lucide="cpu" class="w-6 h-6 text-ocean-accent"></i>
-            </div>
-        </div>
-        <div class="text-center space-y-2">
-            <h2 class="text-xl font-bold tracking-widest text-ocean-text uppercase">AI Finance Controller</h2>
-            <p class="text-xs font-mono text-ocean-accent animate-pulse">INITIALIZING FINANCIAL OPERATING SYSTEM...</p>
         </div>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         TOP NAVIGATION BAR
+         MAIN APPLICATION DASHBOARD (Gated behind valid session)
     ═══════════════════════════════════════════════════════════════════════ -->
-    <nav class="fixed top-0 left-0 right-0 z-40 bg-ocean-bg/95 backdrop-blur-md border-b border-ocean-cardBorder">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-6">
-            <div class="flex items-center space-x-3 shrink-0 mr-2">
-                <div class="w-9 h-9 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center shrink-0">
-                    <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
-                </div>
-                <span class="font-bold text-lg tracking-wider uppercase text-ocean-text whitespace-nowrap">Finance<span class="text-ocean-accent">OS</span></span>
-            </div>
-
-            <div class="hidden 2xl:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted whitespace-nowrap">
-                <a href="#features" class="hover:text-ocean-accent transition-colors">Capabilities</a>
-                <a href="#brief" class="hover:text-ocean-accent transition-colors">Daily Brief</a>
-                <a href="#demo" class="hover:text-ocean-accent transition-colors">Operations Center</a>
-                <a href="#exceptions" class="hover:text-ocean-accent transition-colors">Exceptions</a>
-                <a href="#radar" class="hover:text-ocean-accent transition-colors">Risk Radar</a>
-                <a href="#forecasting" class="hover:text-ocean-accent transition-colors">Forecast & What-If</a>
-            </div>
-
-            <div class="flex items-center space-x-2.5 sm:space-x-3 shrink-0 ml-auto">
-                <div class="bg-ocean-card border border-ocean-cardBorder p-1 rounded-lg flex text-xs shrink-0">
-                    <button id="modeOpBtn" onclick="setMode('operational')" class="px-2.5 py-1 rounded font-bold bg-ocean-accent text-ocean-bg">Ops</button>
-                    <button id="modeExecBtn" onclick="setMode('executive')" class="px-2.5 py-1 rounded text-ocean-textMuted hover:text-ocean-text">Exec</button>
+    <div id="dashboardRoot" class="hidden">
+        <!-- ══════════════════════════════════════════════════════════════════════
+             TOP NAVIGATION BAR — Pixel-perfect layout matching design
+        ═══════════════════════════════════════════════════════════════════════ -->
+        <nav class="fixed top-0 left-0 right-0 z-40 bg-ocean-bg/95 backdrop-blur-md border-b border-ocean-cardBorder">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-3 shrink-0 mr-6 lg:mr-8 xl:mr-12">
+                    <div class="w-10 h-10 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center shrink-0">
+                        <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-wider uppercase text-ocean-text whitespace-nowrap">Finance<span class="text-ocean-accent">OS</span></span>
                 </div>
 
-                <button onclick="openGlobalSearch()" class="hidden sm:flex items-center space-x-2 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted px-3 py-1.5 rounded-lg text-xs hover:border-ocean-accent/50 shrink-0">
-                    <i data-lucide="search" class="w-3.5 h-3.5 text-ocean-accent"></i>
-                    <span>Search</span>
-                    <kbd class="bg-ocean-bg border border-ocean-cardBorder px-1.5 py-0.5 rounded text-[10px] text-ocean-gold">⌘K</kbd>
-                </button>
+                <!-- Desktop Navigation Links -->
+                <div class="hidden xl:flex items-center space-x-6 2xl:space-x-8 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted whitespace-nowrap">
+                    <a href="#features" class="hover:text-ocean-accent transition-colors">OS Capabilities</a>
+                    <a href="#brief" class="hover:text-ocean-accent transition-colors">Daily Brief</a>
+                    <a href="#demo" class="hover:text-ocean-accent transition-colors">Operations Center</a>
+                    <a href="#exceptions" class="hover:text-ocean-accent transition-colors">Exceptions</a>
+                    <a href="#radar" class="hover:text-ocean-accent transition-colors">Risk Radar</a>
+                    <a href="#forecasting" class="hover:text-ocean-accent transition-colors">Forecast & What-If</a>
+                </div>
 
-                <div class="relative">
-                    <button onclick="toggleNotificationPanel()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text relative" title="Notifications">
-                        <i data-lucide="bell" class="w-4 h-4"></i>
-                        <span id="notifBadge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ocean-red rounded-full"></span>
+                <!-- Right-Side Control Cluster -->
+                <div class="flex items-center space-x-2.5 sm:space-x-3 shrink-0 ml-auto">
+                    <!-- Ops / Exec Mode Toggle -->
+                    <div class="bg-ocean-card border border-ocean-cardBorder p-1 rounded-lg flex text-xs shrink-0 h-9 items-center">
+                        <button id="modeOpBtn" onclick="setMode('operational')" class="px-2.5 py-1 rounded font-bold bg-ocean-accent text-ocean-bg transition-all">Ops</button>
+                        <button id="modeExecBtn" onclick="setMode('executive')" class="px-2.5 py-1 rounded text-ocean-textMuted hover:text-ocean-text transition-all">Exec</button>
+                    </div>
+
+                    <!-- Global Search -->
+                    <button onclick="openGlobalSearch()" class="hidden md:flex items-center space-x-2 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted px-3 h-9 rounded-lg text-xs hover:border-ocean-accent/50 shrink-0">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-ocean-accent"></i>
+                        <span>Search</span>
+                        <kbd class="bg-ocean-bg border border-ocean-cardBorder px-1.5 py-0.5 rounded text-[10px] text-ocean-gold">⌘K</kbd>
                     </button>
-                    <div id="notifPanel" class="hidden absolute right-0 mt-3 w-80 bg-ocean-card border border-ocean-cardBorder rounded-xl p-4 shadow-2xl z-50 text-xs space-y-3">
-                        <div class="flex justify-between items-center border-b border-ocean-cardBorder pb-2">
-                            <span class="font-bold text-ocean-text">Notifications</span>
-                            <span id="notifCountLabel" class="text-[10px] text-ocean-accent font-mono">Live</span>
-                        </div>
-                        <div class="space-y-2 max-h-60 overflow-y-auto" id="notifList">
-                            <div class="p-2 bg-ocean-bg rounded border border-ocean-red/30 space-y-1 cursor-pointer" onclick="scrollToSection('exceptions')">
-                                <div class="font-bold text-ocean-red flex justify-between"><span>EXC-9021 Unassigned Deposit</span><span class="text-[9px] font-mono text-ocean-textMuted">10m ago</span></div>
-                                <div class="text-[11px] text-ocean-textMuted">₹82,450 credit missing settlement record.</div>
+
+                    <!-- Notification Bell -->
+                    <div class="relative">
+                        <button onclick="toggleNotificationPanel()" class="w-9 h-9 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text flex items-center justify-center relative shrink-0" title="Notifications">
+                            <i data-lucide="bell" class="w-4 h-4"></i>
+                            <span id="notifBadge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ocean-red rounded-full"></span>
+                        </button>
+                        <div id="notifPanel" class="hidden absolute right-0 mt-3 w-80 bg-ocean-card border border-ocean-cardBorder rounded-xl p-4 shadow-2xl z-50 text-xs space-y-3">
+                            <div class="flex justify-between items-center border-b border-ocean-cardBorder pb-2">
+                                <span class="font-bold text-ocean-text">Notifications</span>
+                                <span id="notifCountLabel" class="text-[10px] text-ocean-accent font-mono">Live</span>
                             </div>
-                            <div class="p-2 bg-ocean-bg rounded border border-ocean-amber/30 space-y-1 cursor-pointer" onclick="scrollToSection('forecasting')">
-                                <div class="font-bold text-ocean-amber flex justify-between"><span>Cash Liquidity Warning</span><span class="text-[9px] font-mono text-ocean-textMuted">1h ago</span></div>
-                                <div class="text-[11px] text-ocean-textMuted">Projected dip in next 7 days.</div>
+                            <div class="space-y-2 max-h-60 overflow-y-auto" id="notifList">
+                                <div class="p-2 bg-ocean-bg rounded border border-ocean-red/30 space-y-1 cursor-pointer" onclick="scrollToSection('exceptions')">
+                                    <div class="font-bold text-ocean-red flex justify-between"><span>EXC-9021 Unassigned Deposit</span><span class="text-[9px] font-mono text-ocean-textMuted">10m ago</span></div>
+                                    <div class="text-[11px] text-ocean-textMuted">₹82,450 credit missing settlement record.</div>
+                                </div>
+                                <div class="p-2 bg-ocean-bg rounded border border-ocean-amber/30 space-y-1 cursor-pointer" onclick="scrollToSection('forecasting')">
+                                    <div class="font-bold text-ocean-amber flex justify-between"><span>Cash Liquidity Warning</span><span class="text-[9px] font-mono text-ocean-textMuted">1h ago</span></div>
+                                    <div class="text-[11px] text-ocean-textMuted">Projected dip in next 7 days.</div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Shortcuts Icon -->
+                    <button onclick="openShortcutsModal()" class="w-9 h-9 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text flex items-center justify-center shrink-0" title="Keyboard Shortcuts (?)">
+                        <i data-lucide="keyboard" class="w-4 h-4"></i>
+                    </button>
+
+                    <!-- Real Sign Out Icon -->
+                    <button onclick="signOut()" class="w-9 h-9 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-red flex items-center justify-center transition-colors shrink-0" title="Sign Out">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+
+                    <!-- Mobile Menu Toggle Button (<1280px) -->
+                    <button onclick="toggleMobileMenu()" id="mobileMenuBtn" class="xl:hidden w-9 h-9 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted hover:text-ocean-accent flex items-center justify-center shrink-0" title="Toggle Navigation Menu">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
                 </div>
+            </div>
 
-                <button onclick="openShortcutsModal()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text" title="Keyboard Shortcuts (?)">
-                    <i data-lucide="keyboard" class="w-4 h-4"></i>
-                </button>
+            <!-- Mobile Navigation Dropdown (<1280px) -->
+            <div id="mobileNavDrawer" class="hidden xl:hidden border-t border-ocean-cardBorder bg-ocean-bg/98 px-6 py-4 space-y-3 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted shadow-2xl">
+                <a href="#features" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">OS Capabilities</a>
+                <a href="#brief" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Daily Brief</a>
+                <a href="#demo" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Operations Center</a>
+                <a href="#exceptions" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Exceptions</a>
+                <a href="#radar" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Risk Radar</a>
+                <a href="#forecasting" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Forecast & What-If</a>
+                <div class="pt-2 border-t border-ocean-cardBorder flex items-center justify-between">
+                    <button onclick="signOut()" class="text-ocean-red flex items-center gap-1.5"><i data-lucide="log-out" class="w-4 h-4"></i><span>Sign Out</span></button>
+                    <button onclick="openGlobalSearch(); toggleMobileMenu();" class="text-ocean-textMuted flex items-center gap-1.5"><i data-lucide="search" class="w-4 h-4"></i><span>Search (⌘K)</span></button>
+                </div>
+            </div>
+        </nav>
 
-                <button onclick="openLoginModal()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-accent transition-colors" title="Account / Sign In / Switch User">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                </button>
+        <!-- ══════════════════════════════════════════════════════════════════════
+             CONTROLLER SESSION BADGE
+        ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="controllerSessionBadge" class="relative pt-24 pb-2 z-30 flex justify-center">
+            <div class="bg-ocean-green/20 border border-ocean-green/50 text-ocean-green text-xs font-mono px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-ocean-green animate-pulse inline-block"></span>
+                <span id="controllerEmailDisplay">LOGGED IN AS CONTROLLER (soumyakumari0205@gmail.com)</span>
             </div>
         </div>
-    </nav>
-
-    <!-- ══════════════════════════════════════════════════════════════════════
-         CONTROLLER SESSION BADGE
-    ═══════════════════════════════════════════════════════════════════════ -->
-    <div id="controllerSessionBadge" class="fixed top-24 left-0 right-0 z-30 flex justify-center pointer-events-none">
-        <div class="bg-ocean-green/20 border border-ocean-green/50 text-ocean-green text-xs font-mono px-4 py-1.5 rounded-full flex items-center gap-2 pointer-events-auto shadow-lg backdrop-blur-md">
-            <span class="w-2 h-2 rounded-full bg-ocean-green animate-pulse inline-block"></span>
-            <span id="controllerEmailDisplay">LOGGED IN AS CONTROLLER (soumyakumari0205@gmail.com)</span>
-        </div>
-    </div>
 
     <section class="relative min-h-screen pt-32 pb-16 px-6 flex items-center justify-center overflow-hidden">
         <div id="elasticMeshContainer" class="elastic-mesh-container opacity-40"></div>
@@ -497,17 +521,9 @@
                     <div class="flex justify-between text-[11px] text-ocean-textMuted mt-1"><span>+$0</span><span id="expenseVal" class="font-bold text-ocean-text">+$0 Expense</span><span>+$100k</span></div>
                 </div>
             </div>
-            <div class="bg-ocean-bg border border-ocean-cardBorder p-6 rounded-xl relative">
-                <div class="h-48 w-full flex items-end gap-2 pt-6" id="forecastBars">
-                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar0"></div>
-                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar1"></div>
-                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar2"></div>
-                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar3"></div>
-                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar4"></div>
-                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar5"></div>
-                </div>
-                <div class="flex justify-between text-[11px] font-mono text-ocean-textMuted mt-4 border-t border-ocean-cardBorder pt-2" id="forecastLabels">
-                    <span>–</span><span>–</span><span>–</span><span>–</span><span>–</span><span>–</span>
+            <div class="bg-ocean-bg border border-ocean-cardBorder p-6 rounded-2xl relative shadow-inner">
+                <div class="grid grid-cols-6 gap-3 sm:gap-4 h-64 items-end pt-4 pb-2" id="forecastBarsGrid">
+                    <!-- Dynamically populated with amount tag, animated bar, and week label -->
                 </div>
             </div>
         </div>
@@ -579,6 +595,7 @@
     <footer class="py-8 border-t border-ocean-cardBorder text-center text-xs text-ocean-textMuted font-mono">
         <p>© 2026 AI Finance Controller Operating System. Real backend. Real matching. Real data.</p>
     </footer>
+    </div><!-- End of #dashboardRoot -->
 
     <!-- Supabase Auth JS (client-side auth only — no service key, no DB access) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -594,93 +611,149 @@
         const SUPABASE_ANON_KEY = "sb_publishable_oaHP2kdaq4IZ9ZGNW3R-7Q_mtpQH2IQ";
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let _authToken = 'token:soumyakumari0205@gmail.com';
-        let _currentUser = { email: 'soumyakumari0205@gmail.com', sub: 'controller', role: 'controller' };
+        let _authToken = localStorage.getItem('AUTH_TOKEN') || null;
+        let _currentUser = localStorage.getItem('USER_EMAIL') ? { email: localStorage.getItem('USER_EMAIL'), sub: 'controller', role: 'controller' } : null;
         let _allRecords = [];
         let _isLiveBackend = false;
 
         // ════════════════════════════════════════════════════════════════════
-        // MODAL & CONNECTION HELPERS
+        // AUTH & CONNECTION HELPERS
         // ════════════════════════════════════════════════════════════════════
 
-        function openLoginModal() {
-            const modal = document.getElementById('loginModal');
-            if (modal) modal.classList.remove('hidden');
+        function enterDevMode() {
+            _authToken = 'dev-mode-no-backend';
+            _currentUser = { email: 'demo@sample.local', sub: 'demo', role: 'demo' };
+            _isLiveBackend = false;
+            localStorage.setItem('AUTH_TOKEN', _authToken);
+            localStorage.setItem('USER_EMAIL', _currentUser.email);
+
+            const gate = document.getElementById('loginGateScreen');
+            const dash = document.getElementById('dashboardRoot');
+            if (gate) gate.classList.add('hidden');
+            if (dash) dash.classList.remove('hidden');
+
+            updateUserNavUI();
+            showToast('Switched to verified Sample Dataset (Dev Mode)');
+            initDashboard();
+            lucide.createIcons();
         }
 
-        function closeLoginModal() {
-            const modal = document.getElementById('loginModal');
-            if (modal) modal.classList.add('hidden');
+        function setDevModeUI() {
+            _isLiveBackend = false;
+            updateUserNavUI();
         }
 
         function updateUserNavUI() {
-            const badge = document.getElementById('controllerSessionBadge');
             const emailDisplay = document.getElementById('controllerEmailDisplay');
-            const email = (_currentUser && _currentUser.email) ? _currentUser.email : 'soumyakumari0205@gmail.com';
+            const email = (_currentUser && _currentUser.email) ? _currentUser.email : 'demo@sample.local';
             if (emailDisplay) {
-                emailDisplay.textContent = `LOGGED IN AS CONTROLLER (${email})`;
+                if (_devMode()) {
+                    emailDisplay.textContent = `DEV / DEMO MODE (${email})`;
+                } else {
+                    emailDisplay.textContent = `LOGGED IN AS CONTROLLER (${email})`;
+                }
             }
         }
 
-        async function attemptLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const btn = document.getElementById('loginBtn');
-            const errEl = document.getElementById('loginError');
-            errEl.classList.add('hidden');
+        async function attemptGateLogin() {
+            const emailInput = document.getElementById('gateLoginEmail');
+            const passwordInput = document.getElementById('gateLoginPassword');
+            const email = (emailInput ? emailInput.value : '').trim();
+            const password = (passwordInput ? passwordInput.value : '');
+            const btn = document.getElementById('gateLoginBtn');
+            const errEl = document.getElementById('gateLoginError');
+            if (errEl) errEl.classList.add('hidden');
 
             if (!email || !email.includes('@')) {
-                errEl.textContent = "Please enter a valid email address.";
-                errEl.classList.remove('hidden');
+                if (errEl) {
+                    errEl.textContent = "Please enter a valid email address.";
+                    errEl.classList.remove('hidden');
+                }
                 return;
             }
 
-            btn.textContent = 'Signing in…';
-            btn.disabled = true;
+            if (!password) {
+                if (errEl) {
+                    errEl.textContent = "Please enter your password.";
+                    errEl.classList.remove('hidden');
+                }
+                return;
+            }
+
+            if (btn) {
+                btn.innerHTML = '<span class="animate-pulse">Validating credentials…</span>';
+                btn.disabled = true;
+            }
 
             try {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (!error && data && data.session) {
-                    _authToken = data.session.access_token;
-                    _currentUser = data.user;
-                    localStorage.setItem('AUTH_TOKEN', _authToken);
-                    closeLoginModal();
-                    updateUserNavUI();
-                    await initDashboard();
+                if (error || !data || !data.session) {
+                    if (errEl) {
+                        errEl.textContent = error?.message || "Invalid email or password. Please verify your credentials.";
+                        errEl.classList.remove('hidden');
+                    }
+                    if (btn) {
+                        btn.innerHTML = '<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In to Controller</span>';
+                        btn.disabled = false;
+                    }
+                    lucide.createIcons();
                     return;
                 }
-            } catch (exc) {
-                console.log("Supabase Auth fallback:", exc);
+
+                _authToken = data.session.access_token;
+                _currentUser = data.user;
+                _isLiveBackend = true;
+                localStorage.setItem('AUTH_TOKEN', _authToken);
+                if (data.user?.email) localStorage.setItem('USER_EMAIL', data.user.email);
+
+                const gate = document.getElementById('loginGateScreen');
+                const dash = document.getElementById('dashboardRoot');
+                if (gate) gate.classList.add('hidden');
+                if (dash) dash.classList.remove('hidden');
+
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In to Controller</span>';
+                    btn.disabled = false;
+                }
+                lucide.createIcons();
+
+                updateUserNavUI();
+                showToast(`Signed in as Controller (${email})`);
+                await initDashboard();
+            } catch (err) {
+                if (errEl) {
+                    errEl.textContent = err.message || "An authentication error occurred.";
+                    errEl.classList.remove('hidden');
+                }
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In to Controller</span>';
+                    btn.disabled = false;
+                }
+                lucide.createIcons();
             }
-
-            // Universal sign-in
-            _authToken = 'token:' + email;
-            _currentUser = { email: email, sub: 'controller', role: 'controller' };
-            localStorage.setItem('AUTH_TOKEN', _authToken);
-            localStorage.setItem('USER_EMAIL', email);
-            closeLoginModal();
-            btn.innerHTML = '<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In to Dashboard</span>';
-            btn.disabled = false;
-            lucide.createIcons();
-
-            updateUserNavUI();
-            await initDashboard();
         }
 
         async function signOut() {
             try { await supabaseClient.auth.signOut(); } catch(e){}
-            _authToken = 'dev-mode-no-backend';
+            _authToken = null;
             _currentUser = null;
+            _isLiveBackend = false;
             localStorage.removeItem('AUTH_TOKEN');
             localStorage.removeItem('USER_EMAIL');
-            updateUserNavUI();
-            await initDashboard();
+
+            const gate = document.getElementById('loginGateScreen');
+            const dash = document.getElementById('dashboardRoot');
+            if (gate) gate.classList.remove('hidden');
+            if (dash) dash.classList.add('hidden');
+
+            showToast('Signed out successfully.');
+            lucide.createIcons();
         }
 
         // ════════════════════════════════════════════════════════════════════
         // REALISTIC VERIFIED DATA FIXTURE (From seed engine)
         // ════════════════════════════════════════════════════════════════════
-        const _devMode = () => !_isLiveBackend || _authToken === 'dev-mode-no-backend';
+        const _devMode = () => !_authToken || _authToken === 'dev-mode-no-backend';
 
         const MOCK_KPIS = { total_processed: 1248, match_rate: 96.8, auto_resolved: 1208, exception_count: 40, explainability_score: 98.0 };
         const MOCK_HEALTH = { score: 92, match_rate: 0.968, exception_count: 40, total_records: 1248, quality_score: 0.972, computed_at: new Date().toISOString(), history: [] };
@@ -708,7 +781,7 @@
             { id:'GW-3020',  date:'2026-08-21', source:'Gateway', description:'Cashfree Payout Batch', amount:'₹74,500.00', matched_record:'INV-9019', status:'Review Needed', confidence:'82.1%', match_reason:'Fuzzy match: amount composite 0.99, date proximity composite 0.65', raw_id:'t20' },
         ];
 
-        const MOCK_EXCEPTIONS = [
+        let _mockExceptions = [
             { id:'exc-001', title:'Bank TXN-2004 — Unassigned HDFC Deposit', description:'No ERP record found within ±3 days. Exposure: ₹82,450.00', exposure_amount:'INR 82,450.00', priority:'critical', status:'open', age_hours:4.2, created_at:new Date().toISOString() },
             { id:'exc-002', title:'Gateway GW-4401 — CloudFlare Duplicate Payout Risk', description:'Two settlements of $12,400 via Stripe to same vendor within 24h', exposure_amount:'USD 12,400.00', priority:'high', status:'open', age_hours:1.1, created_at:new Date().toISOString() },
             { id:'exc-003', title:'ERP INV-8842 — Acme Corp Fuzzy Match Review (81.2%)', description:'Fuzzy match confidence 81.2% — below auto-resolve threshold of 90%', exposure_amount:'USD 12,400.00', priority:'medium', status:'open', age_hours:0.5, created_at:new Date().toISOString() },
@@ -720,7 +793,7 @@
             { id:'an-002', type:'variance_drift', description:'Fee variance drift for Cloudflare Inc: current fee 7.00% vs trailing avg 2.00% (drift 5.00% > threshold 3.0%).', amount:'700.00', detected_at:new Date().toISOString(), status:'open', detail:{ vendor:'Cloudflare Inc', drift_pct:5.0 } },
         ];
 
-        const MOCK_AUDIT = [
+        let _mockAudit = [
             { id:4, actor:'ai', action:'reconciliation:batch:completed', entity_type:'reconciliation_match', entity_id:'2000-series', detail:{ match_rate:96.8 }, created_at:new Date().toISOString() },
             { id:3, actor:'ai', action:'anomaly:detected:duplicate_payout', entity_type:'anomaly', entity_id:'an-001', detail:{ vendor:'Stripe Inc' }, created_at:new Date(Date.now()-45000).toISOString() },
             { id:2, actor:'ai', action:'exception:created', entity_type:'exception', entity_id:'exc-001', detail:{ priority:'critical' }, created_at:new Date(Date.now()-90000).toISOString() },
@@ -744,19 +817,66 @@
             if (path.includes('/api/kpis')) return MOCK_KPIS;
             if (path.includes('/api/health-score')) return MOCK_HEALTH;
             if (path.includes('/api/reconcile/records')) return MOCK_RECORDS;
-            if (path.includes('/api/exceptions')) return MOCK_EXCEPTIONS;
+            if (path.includes('/api/exceptions')) {
+                if (path.includes('/approve')) {
+                    const idMatch = path.match(/\/api\/exceptions\/([^/]+)\/approve/);
+                    const excId = idMatch ? idMatch[1] : '';
+                    _mockExceptions = _mockExceptions.filter(e => e.id !== excId);
+                    MOCK_KPIS.auto_resolved = (MOCK_KPIS.auto_resolved || 1208) + 1;
+                    MOCK_KPIS.exception_count = Math.max(0, (MOCK_KPIS.exception_count || 40) - 1);
+                    MOCK_KPIS.match_rate = parseFloat(((MOCK_KPIS.auto_resolved / MOCK_KPIS.total_processed) * 100).toFixed(1));
+                    MOCK_HEALTH.score = Math.min(99, MOCK_HEALTH.score + 1);
+                    _mockAudit.unshift({ id: Date.now(), actor: 'controller', action: 'exception:approved', entity_type: 'exception', entity_id: excId, detail: body, created_at: new Date().toISOString() });
+                    return { ok: true, status: 'approved', exception_id: excId };
+                }
+                if (path.includes('/reject')) {
+                    const idMatch = path.match(/\/api\/exceptions\/([^/]+)\/reject/);
+                    const excId = idMatch ? idMatch[1] : '';
+                    _mockExceptions = _mockExceptions.filter(e => e.id !== excId);
+                    MOCK_KPIS.exception_count = Math.max(0, (MOCK_KPIS.exception_count || 40) - 1);
+                    _mockAudit.unshift({ id: Date.now(), actor: 'controller', action: 'exception:rejected', entity_type: 'exception', entity_id: excId, detail: body, created_at: new Date().toISOString() });
+                    return { ok: true, status: 'rejected', exception_id: excId };
+                }
+                return _mockExceptions.filter(e => e.status === 'open');
+            }
             if (path.includes('/api/anomalies')) return MOCK_ANOMALIES;
-            if (path.includes('/api/audit-log')) return MOCK_AUDIT;
-            if (path.includes('/api/forecast')) return MOCK_FORECAST;
-            if (path.includes('/api/reconcile/run')) return { total_processed: 1248, matched: 1208, review: 30, exceptions: 40, match_rate: 0.968, health_score: 92, run_id: "seed-run" };
+            if (path.includes('/api/audit-log')) return _mockAudit;
+            if (path.includes('/api/reconcile/run')) return { total_processed: 1248, matched: 1208, review: 30, exceptions: _mockExceptions.length, match_rate: 0.968, health_score: 92, run_id: "seed-run" };
             if (path.includes('/api/forecast/what-if')) {
                 const delay = body.delay_days || 0;
                 const exp = body.unexpected_expense || 0;
+                const scenario = body.scenario || _activeScenario || 'baseline';
+                const mult = scenario === 'optimistic' ? 1.35 : scenario === 'conservative' ? 0.72 : 1.0;
+
                 return {
-                    scenario: 'what-if',
+                    scenario: scenario,
                     bars: MOCK_FORECAST.bars.map(bar => {
-                        const newBalance = bar.projected_balance - (delay * 3000) - (bar.week_offset === 0 ? exp : 0);
-                        return { ...bar, projected_balance: newBalance, height_pct: Math.max(10, Math.min(95, bar.height_pct - (delay * 2) - (bar.week_offset === 0 ? exp / 2000 : 0))) };
+                        const baseBal = bar.projected_balance * mult;
+                        const delayDeduction = delay * (3500 - bar.week_offset * 300);
+                        const expDeduction = (exp / (bar.week_offset + 1)) * 0.75;
+                        const newBalance = Math.round(baseBal - delayDeduction - expDeduction);
+                        return {
+                            ...bar,
+                            projected_balance: newBalance,
+                            height_pct: Math.max(12, Math.min(98, Math.round((Math.max(20000, newBalance) / 320000) * 100)))
+                        };
+                    })
+                };
+            }
+            if (path.includes('/api/forecast')) {
+                let scenario = 'baseline';
+                if (path.includes('scenario=optimistic')) scenario = 'optimistic';
+                if (path.includes('scenario=conservative')) scenario = 'conservative';
+                const mult = scenario === 'optimistic' ? 1.35 : scenario === 'conservative' ? 0.72 : 1.0;
+                return {
+                    scenario: scenario,
+                    bars: MOCK_FORECAST.bars.map(bar => {
+                        const bal = Math.round(bar.projected_balance * mult);
+                        return {
+                            ...bar,
+                            projected_balance: bal,
+                            height_pct: Math.max(15, Math.min(98, Math.round((bal / 320000) * 100)))
+                        };
                     })
                 };
             }
@@ -773,9 +893,14 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
+                if (res.status === 401) {
+                    signOut();
+                    throw new Error('Session expired (401)');
+                }
                 if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
                 return await res.json();
             } catch (err) {
+                if (err.message && err.message.includes('401')) throw err;
                 setDevModeUI();
                 return _getMock(path);
             }
@@ -793,9 +918,14 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
+                if (res.status === 401) {
+                    signOut();
+                    throw new Error('Session expired (401)');
+                }
                 if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
                 return await res.json();
             } catch (err) {
+                if (err.message && err.message.includes('401')) throw err;
                 setDevModeUI();
                 return _getMock(path, body);
             }
@@ -980,8 +1110,10 @@
             try {
                 const data = await apiGet('/api/exceptions?status=open&limit=6');
                 const container = document.getElementById('priorityExceptionsContainer');
-                if (!data.length) {
-                    container.innerHTML = '<div class="p-5 border border-ocean-cardBorder rounded-xl text-center text-ocean-green text-xs font-mono col-span-2">✅ No open exceptions. All records reconciled.</div>';
+                if (!container) return;
+                if (!data || !data.length) {
+                    container.innerHTML = '<div class="p-6 border border-ocean-green/30 bg-ocean-green/5 rounded-xl text-center text-ocean-green text-xs font-mono col-span-1 lg:col-span-2 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i><span>All priority exceptions resolved. Queue clear.</span></div>';
+                    lucide.createIcons();
                     return;
                 }
                 container.innerHTML = '';
@@ -991,7 +1123,8 @@
                     };
                     const color = priorityColors[exc.priority] || 'ocean-accent';
                     const excEl = document.createElement('div');
-                    excEl.className = 'bg-ocean-bg border border-ocean-cardBorder p-5 rounded-xl space-y-3';
+                    excEl.id = `exc-card-${exc.id}`;
+                    excEl.className = 'bg-ocean-bg border border-ocean-cardBorder p-5 rounded-xl space-y-3 transition-all';
                     excEl.innerHTML = `
                         <div class="flex justify-between items-start">
                             <div>
@@ -1002,76 +1135,111 @@
                         </div>
                         <p class="text-xs text-ocean-textMuted">${exc.description || ''}</p>
                         <div class="flex items-center justify-between pt-2 border-t border-ocean-cardBorder">
-                            <span class="text-[10px] text-ocean-gold font-mono">Age: ${exc.age_hours.toFixed(1)}h</span>
+                            <span class="text-[10px] text-ocean-gold font-mono">Age: ${typeof exc.age_hours === 'number' ? exc.age_hours.toFixed(1) : '1.2'}h</span>
                             <div class="flex gap-2">
-                                <button onclick="approveException('${exc.id}', this)" class="px-3 py-1 bg-ocean-green/20 border border-ocean-green/40 text-ocean-green text-xs rounded hover:bg-ocean-green/30">Approve</button>
-                                <button onclick="rejectException('${exc.id}', this)" class="px-3 py-1 bg-ocean-red/20 border border-ocean-red/40 text-ocean-red text-xs rounded hover:bg-ocean-red/30">Reject</button>
+                                <button onclick="approveException('${exc.id}', this)" class="px-3 py-1.5 bg-ocean-green/20 border border-ocean-green/40 text-ocean-green text-xs font-semibold rounded hover:bg-ocean-green hover:text-ocean-bg transition-all flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i><span>Approve</span></button>
+                                <button onclick="rejectException('${exc.id}', this)" class="px-3 py-1.5 bg-ocean-red/20 border border-ocean-red/40 text-ocean-red text-xs font-semibold rounded hover:bg-ocean-red hover:text-ocean-bg transition-all flex items-center gap-1"><i data-lucide="x" class="w-3.5 h-3.5"></i><span>Reject</span></button>
                             </div>
                         </div>
                     `;
                     container.appendChild(excEl);
                 });
+                lucide.createIcons();
             } catch(e) { console.error('Exceptions load failed:', e); }
         }
 
         async function approveException(id, btn) {
-            try {
-                const card = btn.closest('.bg-ocean-bg');
+            const card = btn ? btn.closest('.bg-ocean-bg') : document.getElementById(`exc-card-${id}`);
+            if (card) {
                 card.style.pointerEvents = 'none';
-                await apiPost(`/api/exceptions/${id}/approve`, { note: 'Approved via dashboard' });
-                
-                // Animate card slide up and fade out
-                gsap.to(card, {
-                    opacity: 0,
-                    y: -20,
-                    scale: 0.95,
-                    duration: 0.3,
-                    onComplete: async () => {
-                        card.remove();
-                        // Refresh dashboard counters and lists
-                        await Promise.all([
-                            loadKPIs(),
-                            loadExceptions(),
-                            loadAuditLog(),
-                            loadHealthScore()
-                        ]);
-                    }
-                });
-                addLocalAuditEntry(`Exception ${id.substring(0, 8)} APPROVED`);
-            } catch(e) { 
-                alert('Approval failed — controller role required.'); 
-                btn.closest('.bg-ocean-bg').style.pointerEvents = 'auto';
+                btn.innerHTML = '<span class="animate-pulse">Approving…</span>';
+            }
+            try {
+                await apiPost(`/api/exceptions/${id}/approve`, { note: 'Approved by Controller via Priority Command Center' });
+                showToast(`Exception ${id} approved & resolved`);
+                if (card) {
+                    gsap.to(card, {
+                        opacity: 0,
+                        y: -15,
+                        scale: 0.95,
+                        duration: 0.25,
+                        onComplete: async () => {
+                            card.remove();
+                            await Promise.all([
+                                loadKPIs(),
+                                loadExceptions(),
+                                loadAuditLog(),
+                                loadHealthScore()
+                            ]);
+                        }
+                    });
+                } else {
+                    await Promise.all([loadKPIs(), loadExceptions(), loadAuditLog(), loadHealthScore()]);
+                }
+                addLocalAuditEntry(`Exception ${id} APPROVED by Controller`);
+            } catch(e) {
+                if (card) card.style.pointerEvents = 'auto';
+                if (btn) btn.textContent = 'Approve';
+                showToast(`Error: ${e.message}`);
             }
         }
 
         async function rejectException(id, btn) {
-            try {
-                const card = btn.closest('.bg-ocean-bg');
+            const card = btn ? btn.closest('.bg-ocean-bg') : document.getElementById(`exc-card-${id}`);
+            if (card) {
                 card.style.pointerEvents = 'none';
-                await apiPost(`/api/exceptions/${id}/reject`, { note: 'Rejected via dashboard' });
-                
-                // Animate card slide up and fade out
-                gsap.to(card, {
-                    opacity: 0,
-                    y: -20,
-                    scale: 0.95,
-                    duration: 0.3,
-                    onComplete: async () => {
-                        card.remove();
-                        // Refresh dashboard counters and lists
-                        await Promise.all([
-                            loadKPIs(),
-                            loadExceptions(),
-                            loadAuditLog(),
-                            loadHealthScore()
-                        ]);
-                    }
-                });
-                addLocalAuditEntry(`Exception ${id.substring(0, 8)} REJECTED`);
-            } catch(e) { 
-                alert('Rejection failed — controller role required.'); 
-                btn.closest('.bg-ocean-bg').style.pointerEvents = 'auto';
+                btn.innerHTML = '<span class="animate-pulse">Rejecting…</span>';
             }
+            try {
+                await apiPost(`/api/exceptions/${id}/reject`, { note: 'Rejected by Controller via Priority Command Center' });
+                showToast(`Exception ${id} rejected`);
+                if (card) {
+                    gsap.to(card, {
+                        opacity: 0,
+                        y: -15,
+                        scale: 0.95,
+                        duration: 0.25,
+                        onComplete: async () => {
+                            card.remove();
+                            await Promise.all([
+                                loadKPIs(),
+                                loadExceptions(),
+                                loadAuditLog(),
+                                loadHealthScore()
+                            ]);
+                        }
+                    });
+                } else {
+                    await Promise.all([loadKPIs(), loadExceptions(), loadAuditLog(), loadHealthScore()]);
+                }
+                addLocalAuditEntry(`Exception ${id} REJECTED by Controller`);
+            } catch(e) {
+                if (card) card.style.pointerEvents = 'auto';
+                if (btn) btn.textContent = 'Reject';
+                showToast(`Error: ${e.message}`);
+            }
+        }
+
+        function showToast(msg) {
+            let toast = document.getElementById('financeToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'financeToast';
+                toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-ocean-card border border-ocean-accent/40 text-ocean-accent px-4 py-2 rounded-full text-xs font-mono shadow-2xl flex items-center gap-2 pointer-events-none transition-all duration-300 opacity-0 translate-y-4';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-ocean-accent animate-ping"></span> ${msg}`;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, 0)';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 16px)';
+            }, 2600);
+        }
+
+        function toggleMobileMenu() {
+            const drawer = document.getElementById('mobileNavDrawer');
+            if (drawer) drawer.classList.toggle('hidden');
         }
 
         async function loadAnomalies() {
@@ -1132,18 +1300,24 @@
 
         function updateForecastBars(bars) {
             if (!bars || !bars.length) return;
-            const labelEl = document.getElementById('forecastLabels');
-            labelEl.innerHTML = bars.map(b => `<span>${b.label}</span>`).join('');
-            bars.forEach((bar, i) => {
-                const el = document.getElementById(`bar${i}`);
-                if (el) {
-                    el.style.height = `${bar.height_pct}%`;
-                    // Color by balance direction
-                    const color = bar.projected_balance >= 0 ? 'rgba(0,240,255,' : 'rgba(255,23,68,';
-                    const opacity = 0.3 + (bar.height_pct / 100) * 0.7;
-                    el.style.background = `${color}${opacity.toFixed(2)})`;
-                    el.title = `${bar.label}: ${bar.projected_balance >= 0 ? '+' : ''}${bar.projected_balance.toLocaleString()}`;
-                }
+            const container = document.getElementById('forecastBarsGrid');
+            if (!container) return;
+            container.innerHTML = '';
+            bars.forEach((bar) => {
+                const isPositive = bar.projected_balance >= 0;
+                const formattedAmount = `$${(Math.abs(bar.projected_balance) / 1000).toFixed(0)}k`;
+                const col = document.createElement('div');
+                col.className = 'flex flex-col items-center h-full justify-end group cursor-pointer';
+                col.title = `${bar.label}: ${isPositive ? '+' : '-'}${formattedAmount} ($${bar.projected_balance.toLocaleString()})`;
+                col.innerHTML = `
+                    <div class="text-[11px] sm:text-xs font-mono font-bold text-ocean-accent mb-2 group-hover:scale-110 transition-transform whitespace-nowrap">${isPositive ? '+' : '-'}${formattedAmount}</div>
+                    <div class="w-full bg-ocean-card/60 border border-ocean-cardBorder/80 rounded-xl h-44 flex items-end p-1 sm:p-1.5 overflow-hidden">
+                        <div class="w-full rounded-lg transition-all duration-500 forecast-bar ${isPositive ? 'bg-gradient-to-t from-ocean-accent/30 via-ocean-accent/60 to-ocean-accent border-t border-ocean-accent shadow-[0_0_12px_rgba(0,240,255,0.35)]' : 'bg-gradient-to-t from-ocean-red/30 via-ocean-red/60 to-ocean-red border-t border-ocean-red shadow-[0_0_12px_rgba(255,23,68,0.35)]'}"
+                             style="height: ${Math.max(15, Math.min(100, bar.height_pct))}%;"></div>
+                    </div>
+                    <div class="text-[10px] sm:text-[11px] font-mono text-ocean-textMuted mt-3 font-semibold group-hover:text-ocean-text transition-colors whitespace-nowrap">${bar.label}</div>
+                `;
+                container.appendChild(col);
             });
         }
 
@@ -1201,28 +1375,61 @@
         // FORECAST / WHAT-IF
         // ════════════════════════════════════════════════════════════════════
 
+        let _activeScenario = 'baseline';
+        let whatIfDebounce = null;
+
         async function switchScenario(mode) {
+            _activeScenario = mode;
             ['Base','Opt','Cons'].forEach(s => {
                 const btn = document.getElementById(`scen${s}`);
-                btn.className = 'px-3 py-1.5 rounded font-bold ' + (mode === {Base:'baseline',Opt:'optimistic',Cons:'conservative'}[s] ? 'bg-ocean-accent text-ocean-bg' : 'text-ocean-textMuted hover:text-ocean-text');
+                if (btn) {
+                    const isSelected = mode === {Base:'baseline',Opt:'optimistic',Cons:'conservative'}[s];
+                    btn.className = 'px-3 py-1.5 rounded font-bold transition-all ' + (isSelected ? 'bg-ocean-accent text-ocean-bg shadow-[0_0_10px_rgba(0,240,255,0.4)]' : 'text-ocean-textMuted hover:text-ocean-text');
+                }
             });
-            await loadForecast(mode);
-            addLocalAuditEntry(`Forecast scenario: ${mode.toUpperCase()}`);
+
+            const delay = parseInt(document.getElementById('delaySlider')?.value || 0);
+            const expense = parseInt(document.getElementById('expenseSlider')?.value || 0);
+            const grid = document.getElementById('forecastBarsGrid');
+            if (grid) grid.style.opacity = '0.5';
+
+            try {
+                let data;
+                if (delay > 0 || expense > 0) {
+                    data = await apiPost('/api/forecast/what-if', { delay_days: delay, unexpected_expense: expense, scenario: mode });
+                } else {
+                    data = await apiGet(`/api/forecast?scenario=${mode}`);
+                }
+                updateForecastBars(data.bars);
+            } catch(e) {
+                console.error('Scenario switch failed:', e);
+            } finally {
+                if (grid) grid.style.opacity = '1';
+            }
+
+            addLocalAuditEntry(`Forecast scenario switched to: ${mode.toUpperCase()}`);
         }
 
-        let whatIfDebounce = null;
         async function runWhatIfSimulation() {
             const delay = parseInt(document.getElementById('delaySlider').value);
             const expense = parseInt(document.getElementById('expenseSlider').value);
             document.getElementById('delayVal').textContent = `${delay} Days Delay`;
             document.getElementById('expenseVal').textContent = `+$${expense.toLocaleString()} Expense`;
+
+            const grid = document.getElementById('forecastBarsGrid');
+            if (grid) grid.style.opacity = '0.6';
+
             clearTimeout(whatIfDebounce);
             whatIfDebounce = setTimeout(async () => {
                 try {
-                    const result = await apiPost('/api/forecast/what-if', { delay_days: delay, unexpected_expense: expense });
+                    const result = await apiPost('/api/forecast/what-if', { delay_days: delay, unexpected_expense: expense, scenario: _activeScenario });
                     updateForecastBars(result.bars);
-                } catch(e) { console.error('What-if failed:', e); }
-            }, 300);
+                } catch(e) {
+                    console.error('What-if failed:', e);
+                } finally {
+                    if (grid) grid.style.opacity = '1';
+                }
+            }, 200);
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -1276,7 +1483,37 @@
             addLocalAuditEntry('Exported reconciliation data as CSV.');
         }
 
-        function exportAuditLog() { loadAuditLog(); addLocalAuditEntry('Refreshed audit log.'); }
+        async function exportAuditLog() {
+            try {
+                const data = await apiGet('/api/audit-log?limit=100');
+                const logEntries = (Array.isArray(data) && data.length) ? data : (_mockAudit || []);
+                const csvHeader = 'Timestamp,Action,Entity_Type,Entity_ID,Actor,Detail\n';
+                const csvRows = logEntries.map(e => {
+                    const time = e.created_at || new Date().toISOString();
+                    const action = (e.action || '').replace(/"/g, '""');
+                    const type = (e.entity_type || '').replace(/"/g, '""');
+                    const id = (e.entity_id || '').replace(/"/g, '""');
+                    const actor = (e.actor || 'controller').replace(/"/g, '""');
+                    const detail = JSON.stringify(e.detail || {}).replace(/"/g, '""');
+                    return `"${time}","${action}","${type}","${id}","${actor}","${detail}"`;
+                }).join('\n');
+
+                const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `financeos_audit_log_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast('Audit log downloaded (CSV)');
+                addLocalAuditEntry('Downloaded immutable audit log as CSV.');
+            } catch(e) {
+                showToast('Failed to download audit log');
+            }
+        }
 
         function openAICommandCenter() { document.getElementById('aiCommandModal').classList.remove('hidden'); }
         function closeAICommandCenter() { document.getElementById('aiCommandModal').classList.add('hidden'); }
@@ -1347,11 +1584,10 @@
         const cursor = document.getElementById('targetCursor');
         document.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
 
-        // ── Loading screen / instant dashboard initialization ─────────────
+        // ── Auth gate bootstrap on startup / refresh ─────────────────────
         window.addEventListener('load', async () => {
             lucide.createIcons();
             
-            // Check for existing session in localStorage or Supabase
             const savedEmail = localStorage.getItem('USER_EMAIL');
             const savedToken = localStorage.getItem('AUTH_TOKEN');
             if (savedToken && savedEmail) {
@@ -1363,21 +1599,31 @@
                     if (session) {
                         _authToken = session.access_token;
                         _currentUser = session.user;
+                        localStorage.setItem('AUTH_TOKEN', _authToken);
+                        if (session.user?.email) localStorage.setItem('USER_EMAIL', session.user.email);
+                    } else {
+                        _authToken = null;
+                        _currentUser = null;
                     }
-                } catch(e){}
+                } catch(e) {
+                    _authToken = null;
+                    _currentUser = null;
+                }
             }
 
-            updateUserNavUI();
+            const gate = document.getElementById('loginGateScreen');
+            const dash = document.getElementById('dashboardRoot');
 
-            // Immediately launch dashboard with verified fixture/seed data
-            await initDashboard();
-
-            // Dismiss loading screen quickly
-            const loader = document.getElementById('loadingScreen');
-            if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 300);
+            if (_authToken && _currentUser) {
+                if (gate) gate.classList.add('hidden');
+                if (dash) dash.classList.remove('hidden');
+                updateUserNavUI();
+                await initDashboard();
+            } else {
+                if (gate) gate.classList.remove('hidden');
+                if (dash) dash.classList.add('hidden');
             }
+            lucide.createIcons();
         });
 
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -6,10 +6,10 @@ services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
-    command: postgres -c app.finance_app_password=${FINANCE_APP_PASSWORD:-finance_app_pass}
+    command: postgres -c app.finance_app_password=${FINANCE_APP_PASSWORD:?FINANCE_APP_PASSWORD must be set in .env}
     environment:
       POSTGRES_USER: finance
-      POSTGRES_PASSWORD: finance
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finance}
       POSTGRES_DB: finance_controller
     ports:
       - "5432:5432"
@@ -33,12 +33,12 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://finance_app:${FINANCE_APP_PASSWORD:-finance_app_pass}@db:5432/finance_controller
-      ENABLE_SEED_ENDPOINT: "true"          # dev only
-      SCHEDULER_INTERVAL_MINUTES: "30"
+      DATABASE_URL: postgresql+asyncpg://finance_app:${FINANCE_APP_PASSWORD:?FINANCE_APP_PASSWORD must be set in .env}@db:5432/finance_controller
+      ENABLE_SEED_ENDPOINT: "${ENABLE_SEED_ENDPOINT:-true}"
+      SCHEDULER_INTERVAL_MINUTES: "${SCHEDULER_INTERVAL_MINUTES:-30}"
       SUPABASE_URL: "${SUPABASE_URL:-}"
       SUPABASE_SERVICE_KEY: "${SUPABASE_SERVICE_KEY:-}"
-      SUPABASE_JWT_SECRET: "${SUPABASE_JWT_SECRET:-dev-secret-change-me}"
+      SUPABASE_JWT_SECRET: "${SUPABASE_JWT_SECRET:?SUPABASE_JWT_SECRET must be set in .env}"
       SUPABASE_JWKS_URL: "${SUPABASE_JWKS_URL:-}"
       CORS_ORIGINS: '["http://localhost:8080","http://127.0.0.1:8080","*"]'
     ports:
