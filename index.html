@@ -78,99 +78,125 @@
     <div id="targetCursor" class="hidden md:block"></div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         MAIN APPLICATION DASHBOARD
+         LOGIN OVERLAY — Supabase Auth (email + password)
+         Shown before any dashboard content. Hidden on successful auth.
     ═══════════════════════════════════════════════════════════════════════ -->
-    <div id="dashboardRoot">
-        <!-- ══════════════════════════════════════════════════════════════════════
-             TOP NAVIGATION BAR — Pixel-perfect layout matching design
-        ═══════════════════════════════════════════════════════════════════════ -->
-        <nav class="fixed top-0 left-0 right-0 z-40 bg-ocean-bg/95 backdrop-blur-md border-b border-ocean-cardBorder">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
-                <!-- Brand Logo -->
-                <div class="flex items-center space-x-3 shrink-0 mr-6 lg:mr-8 xl:mr-12">
-                    <div class="w-10 h-10 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center shrink-0">
-                        <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
-                    </div>
-                    <span class="font-bold text-lg tracking-wider uppercase text-ocean-text whitespace-nowrap">Finance<span class="text-ocean-accent">OS</span></span>
+    <div id="loginOverlay">
+        <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-8 w-full max-w-md space-y-6 shadow-2xl ocean-glow">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center">
+                    <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
                 </div>
-
-                <!-- Desktop Navigation Links -->
-                <div class="hidden xl:flex items-center space-x-6 2xl:space-x-8 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted whitespace-nowrap">
-                    <a href="#features" class="hover:text-ocean-accent transition-colors">OS Capabilities</a>
-                    <a href="#brief" class="hover:text-ocean-accent transition-colors">Daily Brief</a>
-                    <a href="#demo" class="hover:text-ocean-accent transition-colors">Operations Center</a>
-                    <a href="#exceptions" class="hover:text-ocean-accent transition-colors">Exceptions</a>
-                    <a href="#radar" class="hover:text-ocean-accent transition-colors">Risk Radar</a>
-                    <a href="#forecasting" class="hover:text-ocean-accent transition-colors">Forecast & What-If</a>
+                <div>
+                    <div class="font-bold text-lg text-ocean-text">Finance<span class="text-ocean-accent">OS</span></div>
+                    <div class="text-xs text-ocean-textMuted">AI Finance Controller</div>
                 </div>
+            </div>
 
-                <!-- Right-Side Control Cluster -->
-                <div class="flex items-center space-x-2.5 sm:space-x-3 shrink-0 ml-auto">
-                    <!-- Ops / Exec Mode Toggle -->
-                    <div class="bg-ocean-card border border-ocean-cardBorder p-1 rounded-lg flex text-xs shrink-0 h-9 items-center">
-                        <button id="modeOpBtn" onclick="setMode('operational')" class="px-2.5 py-1 rounded font-bold bg-ocean-accent text-ocean-bg transition-all">Ops</button>
-                        <button id="modeExecBtn" onclick="setMode('executive')" class="px-2.5 py-1 rounded text-ocean-textMuted hover:text-ocean-text transition-all">Exec</button>
-                    </div>
+            <div class="space-y-1">
+                <h2 class="text-xl font-extrabold text-ocean-text">Sign In</h2>
+                <p class="text-xs text-ocean-textMuted">Authenticate to access the reconciliation dashboard</p>
+            </div>
 
-                    <!-- Global Search -->
-                    <button onclick="openGlobalSearch()" class="hidden md:flex items-center space-x-2 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted px-3 h-9 rounded-lg text-xs hover:border-ocean-accent/50 shrink-0">
-                        <i data-lucide="search" class="w-3.5 h-3.5 text-ocean-accent"></i>
-                        <span>Search</span>
-                        <kbd class="bg-ocean-bg border border-ocean-cardBorder px-1.5 py-0.5 rounded text-[10px] text-ocean-gold">⌘K</kbd>
+            <div id="loginError" class="hidden p-3 bg-ocean-red/10 border border-ocean-red/30 rounded-lg text-xs text-ocean-red"></div>
+
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Email</label>
+                    <input type="email" id="loginEmail" placeholder="controller@yourcompany.com"
+                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-4 py-3 text-sm text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-ocean-textMuted uppercase tracking-wider">Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••"
+                        class="w-full bg-ocean-bg border border-ocean-cardBorder rounded-lg px-4 py-3 text-sm text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none"
+                        onkeydown="if(event.key==='Enter') attemptLogin()">
+                </div>
+            </div>
+
+            <button onclick="attemptLogin()" id="loginBtn"
+                class="w-full bg-ocean-accent text-ocean-bg py-3 rounded-xl font-bold text-sm hover:bg-cyan-300 transition-all ocean-glow">
+                Sign In to Dashboard
+            </button>
+
+            <div class="relative flex items-center gap-3">
+                <div class="flex-1 h-px bg-ocean-cardBorder"></div>
+                <span class="text-[10px] text-ocean-textMuted uppercase tracking-widest">or</span>
+                <div class="flex-1 h-px bg-ocean-cardBorder"></div>
+            </div>
+
+            <button onclick="enterDevMode()"
+                class="w-full bg-ocean-card border border-ocean-accent/40 text-ocean-accent py-3 rounded-xl font-bold text-sm hover:bg-ocean-accent/10 transition-all flex items-center justify-center gap-2">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+                Continue in Dev Mode (No Backend Required)
+            </button>
+            <p class="text-center text-[10px] text-ocean-textMuted">Dev mode: full UI loads with mock token. Connect the backend later for real data.</p>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="fixed inset-0 z-[100] bg-ocean-bg flex flex-col items-center justify-center space-y-6 transition-opacity duration-700">
+        <div class="relative w-24 h-24 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border-2 border-ocean-accent/20 border-t-ocean-accent animate-spin"></div>
+            <div class="w-12 h-12 rounded-lg bg-ocean-accent/10 border border-ocean-accent flex items-center justify-center">
+                <i data-lucide="cpu" class="w-6 h-6 text-ocean-accent"></i>
+            </div>
+        </div>
+        <div class="text-center space-y-2">
+            <h2 class="text-xl font-bold tracking-widest text-ocean-text uppercase">AI Finance Controller</h2>
+            <p class="text-xs font-mono text-ocean-accent animate-pulse">INITIALIZING FINANCIAL OPERATING SYSTEM...</p>
+        </div>
+    </div>
+
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-ocean-bg/85 backdrop-blur-md border-b border-ocean-cardBorder">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-ocean-accent/10 border border-ocean-accent/40 flex items-center justify-center">
+                    <i data-lucide="cpu" class="w-5 h-5 text-ocean-accent"></i>
+                </div>
+                <span class="font-bold text-lg tracking-wider uppercase text-ocean-text">Finance<span class="text-ocean-accent">OS</span></span>
+            </div>
+            <div class="hidden lg:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted">
+                <a href="#features" class="hover:text-ocean-accent transition-colors">OS Capabilities</a>
+                <a href="#brief" class="hover:text-ocean-accent transition-colors">Daily Brief</a>
+                <a href="#demo" class="hover:text-ocean-accent transition-colors">Operations Center</a>
+                <a href="#exceptions" class="hover:text-ocean-accent transition-colors">Exceptions</a>
+                <a href="#radar" class="hover:text-ocean-accent transition-colors">Risk Radar</a>
+                <a href="#forecasting" class="hover:text-ocean-accent transition-colors">Forecast & What-If</a>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="bg-ocean-card border border-ocean-cardBorder p-1 rounded-lg flex text-xs">
+                    <button id="modeOpBtn" onclick="setMode('operational')" class="px-2.5 py-1 rounded font-bold bg-ocean-accent text-ocean-bg">Ops</button>
+                    <button id="modeExecBtn" onclick="setMode('executive')" class="px-2.5 py-1 rounded text-ocean-textMuted hover:text-ocean-text">Exec</button>
+                </div>
+                <button onclick="openGlobalSearch()" class="hidden sm:flex items-center space-x-2 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted px-3 py-1.5 rounded-lg text-xs hover:border-ocean-accent/50">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-ocean-accent"></i>
+                    <span>Search</span>
+                    <kbd class="bg-ocean-bg border border-ocean-cardBorder px-1.5 py-0.5 rounded text-[10px] text-ocean-gold">⌘K</kbd>
+                </button>
+                <div class="relative">
+                    <button onclick="toggleNotificationPanel()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text relative">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                        <span id="notifBadge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ocean-red rounded-full"></span>
                     </button>
-
-                    <!-- Notification Bell -->
-                    <div class="relative">
-                        <button onclick="toggleNotificationPanel()" class="w-9 h-9 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text flex items-center justify-center relative shrink-0" title="Notifications">
-                            <i data-lucide="bell" class="w-4 h-4"></i>
-                            <span id="notifBadge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ocean-red rounded-full"></span>
-                        </button>
-                        <div id="notifPanel" class="hidden absolute right-0 mt-3 w-80 bg-ocean-card border border-ocean-cardBorder rounded-xl p-4 shadow-2xl z-50 text-xs space-y-3">
-                            <div class="flex justify-between items-center border-b border-ocean-cardBorder pb-2">
-                                <span class="font-bold text-ocean-text">Notifications</span>
-                                <span id="notifCountLabel" class="text-[10px] text-ocean-accent font-mono">Live</span>
-                            </div>
-                            <div class="space-y-2 max-h-60 overflow-y-auto" id="notifList">
-                                <div class="p-2 bg-ocean-bg rounded border border-ocean-red/30 space-y-1 cursor-pointer" onclick="scrollToSection('exceptions')">
-                                    <div class="font-bold text-ocean-red flex justify-between"><span>EXC-9021 Unassigned Deposit</span><span class="text-[9px] font-mono text-ocean-textMuted">10m ago</span></div>
-                                    <div class="text-[11px] text-ocean-textMuted">₹82,450 credit missing settlement record.</div>
-                                </div>
-                                <div class="p-2 bg-ocean-bg rounded border border-ocean-amber/30 space-y-1 cursor-pointer" onclick="scrollToSection('forecasting')">
-                                    <div class="font-bold text-ocean-amber flex justify-between"><span>Cash Liquidity Warning</span><span class="text-[9px] font-mono text-ocean-textMuted">1h ago</span></div>
-                                    <div class="text-[11px] text-ocean-textMuted">Projected dip in next 7 days.</div>
-                                </div>
-                            </div>
+                    <div id="notifPanel" class="hidden absolute right-0 mt-3 w-80 bg-ocean-card border border-ocean-cardBorder rounded-xl p-4 shadow-2xl z-50 text-xs space-y-3">
+                        <div class="flex justify-between items-center border-b border-ocean-cardBorder pb-2">
+                            <span class="font-bold text-ocean-text">Notifications</span>
+                            <span id="notifCountLabel" class="text-[10px] text-ocean-accent font-mono">Live</span>
+                        </div>
+                        <div class="space-y-2 max-h-60 overflow-y-auto" id="notifList">
+                            <div class="p-2 bg-ocean-bg rounded border border-ocean-accent/30 text-xs text-ocean-textMuted">Loading from API…</div>
                         </div>
                     </div>
-
-                    <!-- Session Refresh Icon -->
-                    <button onclick="refreshSession()" class="w-9 h-9 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-accent flex items-center justify-center transition-colors shrink-0" title="Refresh Session">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    </button>
-
-                    <!-- Mobile Menu Toggle Button (<1280px) -->
-                    <button onclick="toggleMobileMenu()" id="mobileMenuBtn" class="xl:hidden w-9 h-9 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted hover:text-ocean-accent flex items-center justify-center shrink-0" title="Toggle Navigation Menu">
-                        <i data-lucide="menu" class="w-5 h-5"></i>
-                    </button>
                 </div>
+                <button onclick="openShortcutsModal()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text" title="Keyboard Shortcuts (?)">
+                    <i data-lucide="keyboard" class="w-4 h-4"></i>
+                </button>
+                <button onclick="signOut()" class="p-2 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-red text-xs flex items-center gap-1" title="Sign out">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
             </div>
-
-            <!-- Mobile Navigation Dropdown (<1280px) -->
-            <div id="mobileNavDrawer" class="hidden xl:hidden border-t border-ocean-cardBorder bg-ocean-bg/98 px-6 py-4 space-y-3 text-xs font-semibold uppercase tracking-wider text-ocean-textMuted shadow-2xl">
-                <a href="#features" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">OS Capabilities</a>
-                <a href="#brief" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Daily Brief</a>
-                <a href="#demo" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Operations Center</a>
-                <a href="#exceptions" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Exceptions</a>
-                <a href="#radar" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Risk Radar</a>
-                <a href="#forecasting" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Forecast & What-If</a>
-                <div class="pt-2 border-t border-ocean-cardBorder flex items-center justify-between">
-                    <button onclick="refreshSession(); toggleMobileMenu();" class="text-ocean-accent flex items-center gap-1.5"><i data-lucide="refresh-cw" class="w-4 h-4"></i><span>Refresh Session</span></button>
-                    <button onclick="openGlobalSearch(); toggleMobileMenu();" class="text-ocean-textMuted flex items-center gap-1.5"><i data-lucide="search" class="w-4 h-4"></i><span>Search (⌘K)</span></button>
-                </div>
-            </div>
-        </nav>
-
-
+        </div>
+    </nav>
 
     <section class="relative min-h-screen pt-32 pb-16 px-6 flex items-center justify-center overflow-hidden">
         <div id="elasticMeshContainer" class="elastic-mesh-container opacity-40"></div>
@@ -247,7 +273,7 @@
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                         <span>Recalculate Score</span>
                     </button>
-                    <div id="healthRefreshedLabel" class="text-xs font-mono text-ocean-textMuted">Today at 09:30 AM</div>
+                    <div id="healthRefreshedLabel" class="text-xs font-mono text-ocean-textMuted">Loading…</div>
                 </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -256,33 +282,33 @@
                     <div class="relative w-40 h-40 flex items-center justify-center">
                         <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
                             <path class="text-ocean-cardBorder" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            <path id="healthCircle" class="text-ocean-accent transition-all duration-700" stroke-dasharray="92, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="healthCircle" class="text-ocean-accent transition-all duration-700" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         </svg>
                         <div class="absolute flex flex-col items-center">
-                            <span id="healthScoreValue" class="text-4xl font-extrabold text-ocean-text">92</span>
+                            <span id="healthScoreValue" class="text-4xl font-extrabold text-ocean-text">–</span>
                             <span class="text-[10px] text-ocean-textMuted font-mono">/ 100</span>
                         </div>
                     </div>
-                    <div id="healthBadge" class="px-3 py-1 bg-ocean-green/20 border border-ocean-green/40 text-ocean-green font-bold text-xs rounded-full">EXCELLENT</div>
+                    <div id="healthBadge" class="px-3 py-1 bg-ocean-card border border-ocean-cardBorder text-ocean-textMuted font-bold text-xs rounded-full">LOADING…</div>
                 </div>
                 <div class="lg:col-span-8 bg-ocean-card border border-ocean-cardBorder p-6 rounded-2xl space-y-6">
                     <p class="text-sm lg:text-base text-ocean-text leading-relaxed">
-                        "Reconciliation completed with a <span id="briefMatchRate" class="text-ocean-accent font-bold">96.8%</span> match rate.
-                        <span id="briefExceptionCount" class="text-ocean-red font-bold">40</span> exceptions currently require attention.
+                        "Reconciliation completed with a <span id="briefMatchRate" class="text-ocean-accent font-bold">–%</span> match rate.
+                        <span id="briefExceptionCount" class="text-ocean-red font-bold">–</span> exceptions currently require attention.
                         Health score computed from match rate, exception count, exception age, and data quality."
                     </p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                         <div class="p-3 bg-ocean-bg rounded-lg border border-ocean-green/30 space-y-1">
                             <div class="font-bold text-ocean-green flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-4 h-4"></i> AUTO-RESOLVED</div>
-                            <p class="text-ocean-textMuted"><span id="briefAutoResolved" class="font-bold text-ocean-text">1,208</span> records matched at &gt;90% confidence.</p>
+                            <p class="text-ocean-textMuted"><span id="briefAutoResolved" class="font-bold text-ocean-text">–</span> records matched at &gt;90% confidence.</p>
                         </div>
                         <div class="p-3 bg-ocean-bg rounded-lg border border-ocean-red/30 space-y-1">
                             <div class="font-bold text-ocean-red flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i> OPEN EXCEPTIONS</div>
-                            <p class="text-ocean-textMuted"><span id="briefOpenExc" class="font-bold text-ocean-text">40</span> exceptions need controller review.</p>
+                            <p class="text-ocean-textMuted"><span id="briefOpenExc" class="font-bold text-ocean-text">–</span> exceptions need controller review.</p>
                         </div>
                         <div class="p-3 bg-ocean-bg rounded-lg border border-ocean-amber/30 space-y-1">
                             <div class="font-bold text-ocean-amber flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4"></i> EXPLAINABILITY</div>
-                            <p class="text-ocean-textMuted"><span id="briefExplain" class="font-bold text-ocean-text">98%</span> of matches have full decision trace.</p>
+                            <p class="text-ocean-textMuted"><span id="briefExplain" class="font-bold text-ocean-text">–%</span> of matches have full decision trace.</p>
                         </div>
                         <div class="p-3 bg-ocean-bg rounded-lg border border-ocean-accent/30 space-y-1">
                             <div class="font-bold text-ocean-accent flex items-center gap-1.5"><i data-lucide="lightbulb" class="w-4 h-4"></i> AI RECOMMENDATION</div>
@@ -327,11 +353,11 @@
             </div>
 
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 my-8">
-                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Processed</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-text my-1" id="kpi-records">1,248</div><div class="text-[11px] text-ocean-green flex items-center gap-1">Source Records</div></div>
-                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Match Rate</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-accent my-1" id="kpi-matchrate">96.8%</div><div class="text-[11px] text-ocean-textMuted">Target: &gt;95%</div></div>
-                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Auto-Resolved</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-green my-1" id="kpi-resolved">1,208</div><div class="text-[11px] text-ocean-green">High Confidence</div></div>
-                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Exceptions</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-red my-1" id="kpi-exceptions">40</div><div class="text-[11px] text-ocean-amber">Action Needed</div></div>
-                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl col-span-2 lg:col-span-1"><div class="text-xs text-ocean-textMuted font-medium uppercase">Explainability</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-gold my-1" id="kpi-explainability">98%</div><div class="text-[11px] text-ocean-gold">Match Reasons</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Processed</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-text my-1" id="kpi-records">–</div><div class="text-[11px] text-ocean-green flex items-center gap-1">Source Records</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Match Rate</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-accent my-1" id="kpi-matchrate">–</div><div class="text-[11px] text-ocean-textMuted">Target: &gt;95%</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Auto-Resolved</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-green my-1" id="kpi-resolved">–</div><div class="text-[11px] text-ocean-green">High Confidence</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl"><div class="text-xs text-ocean-textMuted font-medium uppercase">Exceptions</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-red my-1" id="kpi-exceptions">–</div><div class="text-[11px] text-ocean-amber">Action Needed</div></div>
+                <div class="bg-ocean-bg border border-ocean-cardBorder p-4 rounded-xl col-span-2 lg:col-span-1"><div class="text-xs text-ocean-textMuted font-medium uppercase">Explainability</div><div class="text-2xl lg:text-3xl font-extrabold text-ocean-gold my-1" id="kpi-explainability">–</div><div class="text-[11px] text-ocean-gold">Match Reasons</div></div>
             </div>
 
             <div id="liveProcessingPanel" class="hidden mb-6 p-4 bg-ocean-bg border border-ocean-accent/40 rounded-xl space-y-2 font-mono text-xs">
@@ -342,28 +368,28 @@
             <div class="mb-6 p-4 bg-ocean-bg border border-ocean-cardBorder rounded-xl space-y-3">
                 <div class="text-xs font-bold text-ocean-text uppercase tracking-wider">AI Confidence Breakdown</div>
                 <div class="grid grid-cols-3 gap-3 text-xs">
-                    <button id="confBtn_HIGH" onclick="filterByConfidence('HIGH')" class="p-2.5 bg-ocean-card border border-ocean-green/40 rounded-lg flex justify-between items-center hover:border-ocean-green hover:bg-ocean-green/5 transition-all"><span class="text-ocean-green font-medium">High (90-100%)</span><span class="font-bold text-ocean-text font-mono" id="highConfCount">12</span></button>
-                    <button id="confBtn_MED" onclick="filterByConfidence('MED')" class="p-2.5 bg-ocean-card border border-ocean-amber/40 rounded-lg flex justify-between items-center hover:border-ocean-amber hover:bg-ocean-amber/5 transition-all"><span class="text-ocean-amber font-medium">Medium (70-89%)</span><span class="font-bold text-ocean-text font-mono" id="medConfCount">4</span></button>
-                    <button id="confBtn_LOW" onclick="filterByConfidence('LOW')" class="p-2.5 bg-ocean-card border border-ocean-red/40 rounded-lg flex justify-between items-center hover:border-ocean-red hover:bg-ocean-red/5 transition-all"><span class="text-ocean-red font-medium">Low (&lt;70%)</span><span class="font-bold text-ocean-text font-mono" id="lowConfCount">4</span></button>
+                    <button onclick="filterByConfidence('HIGH')" class="p-2 bg-ocean-card border border-ocean-green/30 rounded flex justify-between items-center hover:border-ocean-green"><span class="text-ocean-green">High (90-100%)</span><span class="font-bold text-ocean-text" id="highConfCount">–</span></button>
+                    <button onclick="filterByConfidence('MED')" class="p-2 bg-ocean-card border border-ocean-amber/30 rounded flex justify-between items-center hover:border-ocean-amber"><span class="text-ocean-amber">Medium (70-89%)</span><span class="font-bold text-ocean-text" id="medConfCount">–</span></button>
+                    <button onclick="filterByConfidence('LOW')" class="p-2 bg-ocean-card border border-ocean-red/30 rounded flex justify-between items-center hover:border-ocean-red"><span class="text-ocean-red">Low (&lt;70%)</span><span class="font-bold text-ocean-text" id="lowConfCount">–</span></button>
                 </div>
             </div>
 
             <div class="space-y-4">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h3 class="text-base font-bold text-ocean-text flex items-center gap-2"><i data-lucide="database" class="w-4 h-4 text-ocean-accent"></i>Financial Records — Real Data from Engine</h3>
+                    <h3 class="text-base font-bold text-ocean-text flex items-center gap-2"><i data-lucide="database" class="w-4 h-4 text-ocean-accent"></i>Financial Records — Real Data from API</h3>
                     <div class="flex flex-wrap items-center gap-3">
                         <input type="text" id="searchInput" onkeyup="filterRecords()" placeholder="Search records..." class="bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-1.5 text-xs text-ocean-text placeholder-ocean-textMuted focus:border-ocean-accent outline-none w-44">
                         <select id="sourceFilter" onchange="filterRecords()" class="bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-1.5 text-xs text-ocean-text focus:border-ocean-accent outline-none">
                             <option value="ALL">All Sources</option>
-                            <option value="Bank">Bank</option>
-                            <option value="ERP">ERP</option>
-                            <option value="Gateway">Gateway</option>
+                            <option value="bank">Bank</option>
+                            <option value="erp">ERP</option>
+                            <option value="gateway">Gateway</option>
                         </select>
                         <select id="statusFilter" onchange="filterRecords()" class="bg-ocean-bg border border-ocean-cardBorder rounded-lg px-3 py-1.5 text-xs text-ocean-text focus:border-ocean-accent outline-none">
                             <option value="ALL">All Statuses</option>
-                            <option value="Matched">🟢 Matched</option>
-                            <option value="Review Needed">🟡 Review Needed</option>
-                            <option value="Exception">🔴 Exception</option>
+                            <option value="matched">🟢 Matched</option>
+                            <option value="review">🟡 Review Needed</option>
+                            <option value="exception">🔴 Exception</option>
                         </select>
                     </div>
                 </div>
@@ -373,6 +399,7 @@
                             <tr><th class="p-3">ID</th><th class="p-3">Date</th><th class="p-3">Source</th><th class="p-3">Description</th><th class="p-3">Amount</th><th class="p-3">Matched Record</th><th class="p-3">Status</th><th class="p-3">Confidence</th><th class="p-3 text-right">Action</th></tr>
                         </thead>
                         <tbody id="recordsTableBody" class="divide-y divide-ocean-cardBorder text-xs text-ocean-text">
+                            <tr><td colspan="9" class="p-6 text-center text-ocean-textMuted font-mono">Run reconciliation or wait for scheduler…</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -395,6 +422,7 @@
                 <span class="px-3 py-1 bg-ocean-red/10 border border-ocean-red/30 text-ocean-red text-xs font-bold rounded-full">Priority Sorted Queue</span>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" id="priorityExceptionsContainer">
+                <div class="p-5 border border-ocean-cardBorder rounded-xl text-center text-ocean-textMuted text-xs font-mono">Loading exceptions from API…</div>
             </div>
         </div>
     </section>
@@ -404,19 +432,20 @@
             <div class="lg:col-span-7 bg-ocean-card border border-ocean-cardBorder p-6 rounded-2xl space-y-6">
                 <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Multi-Dimensional Assessment</div><h3 class="text-xl font-bold text-ocean-text mt-1">AI Risk Radar</h3></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bento-grid-target" id="riskRadarGrid">
-                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Reconciliation Risk</span><span class="font-bold text-ocean-amber" id="riskReconPct">12%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-amber h-2 rounded-full transition-all" id="riskReconBar" style="width:12%"></div></div></div>
-                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Exception Exposure</span><span class="font-bold text-ocean-red" id="riskExcPct">28%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-red h-2 rounded-full transition-all" id="riskExcBar" style="width:28%"></div></div></div>
-                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Anomaly Risk</span><span class="font-bold text-ocean-green" id="riskAnomPct">5%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-green h-2 rounded-full transition-all" id="riskAnomBar" style="width:5%"></div></div></div>
-                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Data Quality</span><span class="font-bold text-ocean-accent" id="riskQualPct">97.2%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-accent h-2 rounded-full transition-all" id="riskQualBar" style="width:97.2%"></div></div></div>
+                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Reconciliation Risk</span><span class="font-bold text-ocean-amber" id="riskReconPct">–%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-amber h-2 rounded-full transition-all" id="riskReconBar" style="width:0%"></div></div></div>
+                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Exception Exposure</span><span class="font-bold text-ocean-red" id="riskExcPct">–%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-red h-2 rounded-full transition-all" id="riskExcBar" style="width:0%"></div></div></div>
+                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Anomaly Risk</span><span class="font-bold text-ocean-green" id="riskAnomPct">–%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-green h-2 rounded-full transition-all" id="riskAnomBar" style="width:0%"></div></div></div>
+                    <div class="magic-bento-card magic-bento-card--border-glow p-4 bg-ocean-bg rounded-xl space-y-2"><div class="flex justify-between text-xs"><span class="text-ocean-textMuted">Data Quality</span><span class="font-bold text-ocean-accent" id="riskQualPct">–%</span></div><div class="w-full bg-ocean-cardBorder h-2 rounded-full"><div class="bg-ocean-accent h-2 rounded-full transition-all" id="riskQualBar" style="width:0%"></div></div></div>
                 </div>
             </div>
             <div class="lg:col-span-5 bg-ocean-card border border-ocean-cardBorder p-6 rounded-2xl space-y-6">
                 <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">System Integrity</div><h3 class="text-xl font-bold text-ocean-text mt-1">Data Quality Monitor</h3></div>
                 <div class="flex items-center justify-between p-4 bg-ocean-bg rounded-xl border border-ocean-cardBorder">
-                    <div><div class="text-xs text-ocean-textMuted">Overall Data Quality Score</div><div class="text-3xl font-extrabold text-ocean-green mt-1" id="qualityScoreDisplay">97.2%</div></div>
+                    <div><div class="text-xs text-ocean-textMuted">Overall Data Quality Score</div><div class="text-3xl font-extrabold text-ocean-green mt-1" id="qualityScoreDisplay">–%</div></div>
                     <i data-lucide="shield-check" class="w-10 h-10 text-ocean-green"></i>
                 </div>
             </div>
+        </div>
     </section>
 
     <section class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section">
@@ -451,9 +480,17 @@
                     <div class="flex justify-between text-[11px] text-ocean-textMuted mt-1"><span>+$0</span><span id="expenseVal" class="font-bold text-ocean-text">+$0 Expense</span><span>+$100k</span></div>
                 </div>
             </div>
-            <div class="bg-ocean-bg border border-ocean-cardBorder p-6 rounded-2xl relative shadow-inner">
-                <div class="grid grid-cols-6 gap-3 sm:gap-4 h-64 items-end pt-4 pb-2" id="forecastBarsGrid">
-                    <!-- Dynamically populated with amount tag, animated bar, and week label -->
+            <div class="bg-ocean-bg border border-ocean-cardBorder p-6 rounded-xl relative">
+                <div class="h-48 w-full flex items-end gap-2 pt-6" id="forecastBars">
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar0"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar1"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar2"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar3"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar4"></div>
+                    <div class="flex-1 bg-ocean-accent/20 h-[30%] rounded-t forecast-bar" id="bar5"></div>
+                </div>
+                <div class="flex justify-between text-[11px] font-mono text-ocean-textMuted mt-4 border-t border-ocean-cardBorder pt-2" id="forecastLabels">
+                    <span>–</span><span>–</span><span>–</span><span>–</span><span>–</span><span>–</span>
                 </div>
             </div>
         </div>
@@ -525,7 +562,6 @@
     <footer class="py-8 border-t border-ocean-cardBorder text-center text-xs text-ocean-textMuted font-mono">
         <p>© 2026 AI Finance Controller Operating System. Real backend. Real matching. Real data.</p>
     </footer>
-    </div><!-- End of #dashboardRoot -->
 
     <!-- Supabase Auth JS (client-side auth only — no service key, no DB access) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -534,89 +570,111 @@
         lucide.createIcons();
 
         // ════════════════════════════════════════════════════════════════════
-        // CONFIGURATION & STATE
+        // CONFIGURATION
+        // Update API_BASE to match your backend URL (same origin via nginx, or
+        // explicit http://localhost:8000 for local dev without Docker).
         // ════════════════════════════════════════════════════════════════════
-        let API_BASE = window.ENV_API_URL || localStorage.getItem('API_URL') || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : '');
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : '';
         const SUPABASE_URL = "https://pnryywkjewwwnnushhiy.supabase.co";
+        // Publishable (anon) key — safe in browser, used ONLY for auth sign-in.
+        // The service-role key is NEVER here; all DB writes go through the FastAPI backend.
         const SUPABASE_ANON_KEY = "sb_publishable_oaHP2kdaq4IZ9ZGNW3R-7Q_mtpQH2IQ";
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let _authToken = localStorage.getItem('AUTH_TOKEN') || null;
-        let _currentUser = localStorage.getItem('USER_EMAIL') ? { email: localStorage.getItem('USER_EMAIL'), sub: 'controller', role: 'controller' } : null;
+        let _authToken = null;
+        let _currentUser = null;
         let _allRecords = [];
-        let _isLiveBackend = false;
 
         // ════════════════════════════════════════════════════════════════════
-        // AUTH & CONNECTION HELPERS
+        // AUTH HELPERS
         // ════════════════════════════════════════════════════════════════════
 
-        // ════════════════════════════════════════════════════════════════════
-        // SESSION & CONTROLLER HELPERS
-        // ════════════════════════════════════════════════════════════════════
+        async function attemptLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('loginError');
+            errEl.classList.add('hidden');
+            btn.textContent = 'Signing in…';
+            btn.disabled = true;
 
-        function updateUserNavUI() {
-            const emailDisplay = document.getElementById('controllerEmailDisplay');
-            const email = (_currentUser && _currentUser.email) ? _currentUser.email : 'controller@financeos.io';
-            if (emailDisplay) {
-                emailDisplay.textContent = `LOGGED IN AS CONTROLLER (${email})`;
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                errEl.textContent = error.message;
+                errEl.classList.remove('hidden');
+                btn.textContent = 'Sign In to Dashboard';
+                btn.disabled = false;
+                return;
             }
+
+            _authToken = data.session.access_token;
+            _currentUser = data.user;
+            document.getElementById('loginOverlay').classList.add('hidden');
+            btn.textContent = 'Sign In to Dashboard';
+            btn.disabled = false;
+            initDashboard();
         }
 
-        function refreshSession() {
-            showToast('Reconciliation session refreshed.');
+        async function sendMagicLink() {
+            const email = document.getElementById('loginEmail').value.trim();
+            if (!email) { alert('Enter your email first.'); return; }
+            await supabaseClient.auth.signInWithOtp({ email });
+            alert(`Magic link sent to ${email}. Check your inbox.`);
+        }
+
+        async function signOut() {
+            await supabaseClient.auth.signOut();
+            _authToken = null;
+            _currentUser = null;
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
+
+        // ── Dev Mode bypass ───────────────────────────────────────────────
+        function enterDevMode() {
+            _authToken = 'dev-mode-no-backend';
+            _currentUser = { sub: 'dev', email: 'dev@local' };
+            document.getElementById('loginOverlay').classList.add('hidden');
+            const banner = document.createElement('div');
+            banner.className = 'fixed top-20 left-0 right-0 z-50 flex justify-center pointer-events-none';
+            banner.innerHTML = `<div class="bg-ocean-amber/20 border border-ocean-amber/50 text-ocean-amber text-xs font-mono px-4 py-2 rounded-full flex items-center gap-2 pointer-events-auto shadow-lg">
+                <span class="w-2 h-2 rounded-full bg-ocean-amber animate-pulse inline-block"></span>
+                DEV MODE — Mock data shown. Start FastAPI backend on :8000 for real reconciliation.
+            </div>`;
+            document.body.appendChild(banner);
             initDashboard();
         }
 
         // ════════════════════════════════════════════════════════════════════
-        // REALISTIC VERIFIED DATA FIXTURE (From seed engine)
+        // MOCK DATA — shown in Dev Mode when backend is not running
         // ════════════════════════════════════════════════════════════════════
-        const _devMode = () => !_authToken || _authToken === 'dev-mode-no-backend';
+        const _devMode = () => _authToken === 'dev-mode-no-backend';
 
-        const MOCK_KPIS = { total_processed: 1248, match_rate: 96.8, auto_resolved: 1208, exception_count: 40, explainability_score: 98.0 };
-        const MOCK_HEALTH = { score: 92, match_rate: 0.968, exception_count: 40, total_records: 1248, quality_score: 0.972, computed_at: new Date().toISOString(), history: [] };
-        
+        const MOCK_KPIS = { total_processed:52, match_rate:78.3, auto_resolved:31, exception_count:7, explainability_score:94.2 };
+        const MOCK_HEALTH = { score:82, match_rate:0.783, exception_count:7, total_records:52, quality_score:0.96, computed_at:new Date().toISOString(), history:[] };
         const MOCK_RECORDS = [
-            { id:'TXN-2001', date:'2026-08-30', source:'Bank', description:'Stripe Inc Settlement', amount:'₹136,367.17', matched_record:'INV-9000', status:'Matched', confidence:'98.4%', match_reason:'Exact match: amount match (±0.01), date within 2 days, reference overlap (TXN-2001 ↔ INV-9000)', raw_id:'a1' },
-            { id:'TXN-2002', date:'2026-08-30', source:'Bank', description:'AWS Cloud Services', amount:'$84,049.55', matched_record:'GW-3021', status:'Review Needed', confidence:'81.2%', match_reason:'Fuzzy match (composite=0.81): amount_score=0.98, date_score=0.67, desc_similarity=77%', raw_id:'b2' },
-            { id:'TXN-2003', date:'2026-08-29', source:'Bank', description:'Acme Corp Wire', amount:'₹122,945.11', matched_record:'INV-9002', status:'Matched', confidence:'96.8%', match_reason:'Exact match: identical amount, date proximity 1 day, exact vendor token overlap', raw_id:'c3' },
-            { id:'TXN-2004', date:'2026-08-29', source:'Bank', description:'HDFC Deposit • EXC-9021', amount:'₹82,450.00', matched_record:'Unmatched', status:'Exception', confidence:'0.0%', match_reason:'No ERP record found within ±3 days and acceptable amount/description similarity', raw_id:'d4' },
-            { id:'TXN-2005', date:'2026-08-28', source:'Bank', description:'CloudFlare Inc Subscription', amount:'₹120,256.72', matched_record:'INV-9004', status:'Matched', confidence:'99.1%', match_reason:'Exact match: identical amount, identical date, exact reference token overlap', raw_id:'e5' },
-            { id:'TXN-2006', date:'2026-08-28', source:'Bank', description:'Salesforce Inc Enterprise', amount:'₹180,131.65', matched_record:'INV-9005', status:'Matched', confidence:'97.5%', match_reason:'Exact match: same amount (±0.00), date within 1 day, reference overlap', raw_id:'f6' },
-            { id:'TXN-2007', date:'2026-08-27', source:'Bank', description:'HubSpot Technologies', amount:'₹170,615.87', matched_record:'INV-9006', status:'Review Needed', confidence:'78.4%', match_reason:'Fuzzy review: amount diff $2.10, date diff 2 days, description match 88%', raw_id:'g7' },
-            { id:'TXN-2008', date:'2026-08-27', source:'Bank', description:'Plaid Technologies', amount:'₹114,896.38', matched_record:'GW-4399', status:'Exception', confidence:'0.0%', match_reason:'Duplicate payout risk: two gateway records (GW-4399, GW-4401) matched same vendor within 24h', raw_id:'h8' },
-            { id:'INV-9001', date:'2026-08-27', source:'ERP', description:'Oracle NetSuite Vendor Clearing', amount:'₹245,000.00', matched_record:'TXN-2009', status:'Matched', confidence:'98.9%', match_reason:'Exact match: ERP purchase order matched banking transaction hash', raw_id:'erp1' },
-            { id:'INV-9002', date:'2026-08-26', source:'ERP', description:'SAP Business One Invoice 4410', amount:'$54,200.00', matched_record:'GW-3010', status:'Matched', confidence:'97.2%', match_reason:'Exact match: invoice reference number matching gateway settlement token', raw_id:'erp2' },
-            { id:'INV-9003', date:'2026-08-25', source:'ERP', description:'Microsoft Azure Cloud Invoice', amount:'$38,900.00', matched_record:'TXN-2012', status:'Review Needed', confidence:'84.0%', match_reason:'Fuzzy match: date offset 2 days, tax calculation rounding variance', raw_id:'erp3' },
-            { id:'INV-9004', date:'2026-08-24', source:'ERP', description:'Unassigned Vendor Discrepancy', amount:'₹150,000.00', matched_record:'Unmatched', status:'Exception', confidence:'0.0%', match_reason:'ERP open invoice with no corresponding bank statement or credit memo', raw_id:'erp4' },
-            { id:'INV-9017', date:'2026-08-22', source:'ERP', description:'PayU India Merchant Wire', amount:'₹88,200.00', matched_record:'TXN-2018', status:'Matched', confidence:'95.4%', match_reason:'Exact match: amount matched, date within 2 days, reference overlap', raw_id:'r18' },
-            { id:'GW-3010',  date:'2026-08-26', source:'Gateway', description:'SendGrid Email API Gateway Batch', amount:'$126,883.95', matched_record:'INV-9002', status:'Matched', confidence:'98.0%', match_reason:'Exact match: identical amount, identical date, exact reference overlap', raw_id:'j10' },
-            { id:'GW-3014',  date:'2026-08-24', source:'Gateway', description:'Netlify Edge CDN Payout', amount:'$18,950.00', matched_record:'TXN-2014', status:'Matched', confidence:'99.3%', match_reason:'Exact match: identical amount, date matched, token overlap', raw_id:'n14' },
-            { id:'GW-4401',  date:'2026-08-22', source:'Gateway', description:'Stripe Payout • EXC-9022', amount:'$12,400.00', matched_record:'GW-4399', status:'Exception', confidence:'0.0%', match_reason:'Duplicate risk: two settlements of $12,400 via Stripe to same vendor within 24h', raw_id:'q17' },
-            { id:'GW-3019',  date:'2026-08-21', source:'Gateway', description:'Razorpay Batch Settlement', amount:'₹210,000.00', matched_record:'INV-9018', status:'Matched', confidence:'96.0%', match_reason:'Exact match: identical amount, date proximity 1 day', raw_id:'s19' },
-            { id:'GW-3020',  date:'2026-08-21', source:'Gateway', description:'Cashfree Payout Batch', amount:'₹74,500.00', matched_record:'INV-9019', status:'Review Needed', confidence:'82.1%', match_reason:'Fuzzy match: amount composite 0.99, date proximity composite 0.65', raw_id:'t20' },
-            { id:'TXN-2015', date:'2026-08-23', source:'Bank', description:'GitHub Inc Copilot Seats', amount:'₹32,100.00', matched_record:'Unmatched', status:'Exception', confidence:'0.0%', match_reason:'No corresponding invoice or gateway settlement in ledger within window', raw_id:'o15' },
-            { id:'TXN-2016', date:'2026-08-23', source:'Bank', description:'Atlassian Corp Jira/Confluence', amount:'₹142,500.00', matched_record:'INV-9015', status:'Matched', confidence:'98.7%', match_reason:'Exact match: amount within ±0.01, date within 1 day, reference overlap', raw_id:'p16' },
+            { id:'TXN-9821', date:'2026-08-27', source:'Bank', description:'Stripe Settlement', amount:'₹42,850.00', matched_record:'INV-8821', status:'Matched', confidence:'97.4%', match_reason:'Exact match: amount match (±0.01), date within 3 days, reference overlap (TXN-9821 ↔ INV-8821)', raw_id:'a1' },
+            { id:'INV-8842', date:'2026-08-25', source:'ERP', description:'Acme Corp Wire', amount:'₹12,400.00', matched_record:'GW-3021', status:'Review Needed', confidence:'81.2%', match_reason:'Fuzzy match (composite=0.81): amount_score=0.98, date_score=0.67, desc_similarity=77%', raw_id:'b2' },
+            { id:'TXN-0043', date:'2026-08-24', source:'Bank', description:'HDFC Deposit', amount:'₹82,450.00', matched_record:'Unmatched', status:'Exception', confidence:'0.0%', match_reason:'No ERP record found within ±3 days and acceptable amount/description similarity for TXN-0043', raw_id:'c3' },
+            { id:'GW-3055',  date:'2026-08-23', source:'Gateway', description:'Razorpay Payout', amount:'₹9,200.00', matched_record:'INV-9001', status:'Matched', confidence:'95.1%', match_reason:'Exact match: amount match (±0.01), date within 3 days, reference overlap', raw_id:'d4' },
+            { id:'INV-7721', date:'2026-08-22', source:'ERP', description:'CloudFlare Inc', amount:'₹14,250.00', matched_record:'TXN-7700', status:'Matched', confidence:'96.8%', match_reason:'Exact match: same amount, same date, reference token overlap (INV-7721 ↔ TXN-7700)', raw_id:'e5' },
+            { id:'TXN-5510', date:'2026-08-21', source:'Bank', description:'AWS Cloud Services', amount:'₹28,700.00', matched_record:'INV-5500', status:'Matched', confidence:'99.1%', match_reason:'Exact match: identical amount, identical date, exact reference overlap', raw_id:'f6' },
+            { id:'GW-4401',  date:'2026-08-20', source:'Gateway', description:'Stripe Payout', amount:'₹12,400.00', matched_record:'GW-4399', status:'Exception', confidence:'0.0%', match_reason:'Duplicate risk: two gateway records (GW-4399, GW-4401) matched same vendor within 24h', raw_id:'g7' },
         ];
-
-        let _mockExceptions = [
-            { id:'exc-001', title:'Bank TXN-2004 — Unassigned HDFC Deposit', description:'No ERP record found within ±3 days. Exposure: ₹82,450.00', exposure_amount:'INR 82,450.00', priority:'critical', status:'open', age_hours:4.2, created_at:new Date().toISOString() },
-            { id:'exc-002', title:'Gateway GW-4401 — CloudFlare Duplicate Payout Risk', description:'Two settlements of $12,400 via Stripe to same vendor within 24h', exposure_amount:'USD 12,400.00', priority:'high', status:'open', age_hours:1.1, created_at:new Date().toISOString() },
-            { id:'exc-003', title:'ERP INV-8842 — Acme Corp Fuzzy Match Review (81.2%)', description:'Fuzzy match confidence 81.2% — below auto-resolve threshold of 90%', exposure_amount:'USD 12,400.00', priority:'medium', status:'open', age_hours:0.5, created_at:new Date().toISOString() },
-            { id:'exc-004', title:'Bank TXN-2015 — GitHub Copilot Seats Unmatched', description:'Missing billing reference in general ledger. Exposure: ₹32,100.00', exposure_amount:'INR 32,100.00', priority:'low', status:'open', age_hours:6.3, created_at:new Date().toISOString() },
+        const MOCK_EXCEPTIONS = [
+            { id:'exc-001', title:'Bank TXN-0043 — No ERP match found within ±3 days', description:'No ERP record found within ±3 days. Exposure: ₹82,450.00', exposure_amount:'INR 82,450.00', priority:'critical', status:'open', age_hours:4.2, created_at:new Date().toISOString() },
+            { id:'exc-002', title:'Gateway GW-4401 — Duplicate payout risk', description:'Two settlements of ₹12,400 via Stripe to same vendor within 24h', exposure_amount:'INR 12,400.00', priority:'high', status:'open', age_hours:1.1, created_at:new Date().toISOString() },
+            { id:'exc-003', title:'ERP INV-8842 — Fuzzy match needs review (81.2%)', description:'Fuzzy match confidence 81.2% — below auto-resolve threshold of 90%', exposure_amount:'INR 12,400.00', priority:'medium', status:'open', age_hours:0.5, created_at:new Date().toISOString() },
         ];
-
         const MOCK_ANOMALIES = [
-            { id:'an-001', type:'duplicate_payout', description:'Duplicate payout: Stripe Inc received $12,400.00 twice via Stripe within 24h (GW-4399 and GW-4401).', amount:'12400.00', detected_at:new Date().toISOString(), status:'open', detail:{ vendor:'Stripe Inc', amount:12400 } },
+            { id:'an-001', type:'duplicate_payout', description:'Duplicate payout: Stripe Inc received ₹12,400.00 twice via Stripe within 24h (GW-4399 and GW-4401).', amount:'12400.00', detected_at:new Date().toISOString(), status:'open', detail:{ vendor:'Stripe Inc', amount:12400 } },
             { id:'an-002', type:'variance_drift', description:'Fee variance drift for Cloudflare Inc: current fee 7.00% vs trailing avg 2.00% (drift 5.00% > threshold 3.0%).', amount:'700.00', detected_at:new Date().toISOString(), status:'open', detail:{ vendor:'Cloudflare Inc', drift_pct:5.0 } },
         ];
-
-        let _mockAudit = [
-            { id:4, actor:'ai', action:'reconciliation:batch:completed', entity_type:'reconciliation_match', entity_id:'2000-series', detail:{ match_rate:96.8 }, created_at:new Date().toISOString() },
-            { id:3, actor:'ai', action:'anomaly:detected:duplicate_payout', entity_type:'anomaly', entity_id:'an-001', detail:{ vendor:'Stripe Inc' }, created_at:new Date(Date.now()-45000).toISOString() },
-            { id:2, actor:'ai', action:'exception:created', entity_type:'exception', entity_id:'exc-001', detail:{ priority:'critical' }, created_at:new Date(Date.now()-90000).toISOString() },
-            { id:1, actor:'ai', action:'reconcile:exact_matched', entity_type:'reconciliation_match', entity_id:'TXN-2001', detail:{ confidence:98.4 }, created_at:new Date(Date.now()-180000).toISOString() },
+        const MOCK_AUDIT = [
+            { id:3, actor:'ai', action:'anomaly:detected:duplicate_payout', entity_type:'anomaly', entity_id:'an-001', detail:{}, created_at:new Date().toISOString() },
+            { id:2, actor:'ai', action:'exception:created', entity_type:'exception', entity_id:'exc-001', detail:{ priority:'critical' }, created_at:new Date(Date.now()-60000).toISOString() },
+            { id:1, actor:'ai', action:'reconcile:matched', entity_type:'reconciliation_match', entity_id:'a1', detail:{ confidence:97.4 }, created_at:new Date(Date.now()-120000).toISOString() },
         ];
-
         const MOCK_FORECAST = { scenario:'baseline', bars:[
             {week_offset:0,label:'Week 1',projected_balance:124000,height_pct:52},
             {week_offset:1,label:'Week 2',projected_balance:187000,height_pct:72},
@@ -627,137 +685,53 @@
         ]};
 
         // ════════════════════════════════════════════════════════════════════
-        // API HELPERS — Timeout & graceful fallback
+        // API HELPERS — Bearer token on all calls; mock fallback in dev mode
         // ════════════════════════════════════════════════════════════════════
 
-        function _getMock(path, body = {}) {
-            if (path.includes('/api/kpis')) return MOCK_KPIS;
-            if (path.includes('/api/health-score')) return MOCK_HEALTH;
-            if (path.includes('/api/reconcile/records')) {
-                let records = [...MOCK_RECORDS];
-                const queryString = path.includes('?') ? path.split('?')[1] : '';
-                const params = new URLSearchParams(queryString);
-                const status = params.get('status');
-                const source = params.get('source');
-                const search = params.get('search');
-                
-                if (status && status !== 'ALL') {
-                    records = records.filter(r => (r.status || '').toLowerCase() === status.toLowerCase());
-                }
-                if (source && source !== 'ALL') {
-                    records = records.filter(r => (r.source || '').toLowerCase() === source.toLowerCase());
-                }
-                if (search) {
-                    const q = search.toLowerCase();
-                    records = records.filter(r => 
-                        (r.id || '').toLowerCase().includes(q) || 
-                        (r.description || '').toLowerCase().includes(q) || 
-                        (r.matched_record || '').toLowerCase().includes(q) ||
-                        (r.amount || '').toLowerCase().includes(q)
-                    );
-                }
-                return records;
-            }
-            if (path.includes('/api/exceptions')) {
-                if (path.includes('/approve')) {
-                    const idMatch = path.match(/\/api\/exceptions\/([^/]+)\/approve/);
-                    const excId = idMatch ? idMatch[1] : '';
-                    _mockExceptions = _mockExceptions.filter(e => e.id !== excId);
-                    MOCK_KPIS.auto_resolved = (MOCK_KPIS.auto_resolved || 1208) + 1;
-                    MOCK_KPIS.exception_count = Math.max(0, (MOCK_KPIS.exception_count || 40) - 1);
-                    MOCK_KPIS.match_rate = parseFloat(((MOCK_KPIS.auto_resolved / MOCK_KPIS.total_processed) * 100).toFixed(1));
-                    MOCK_HEALTH.score = Math.min(99, MOCK_HEALTH.score + 1);
-                    _mockAudit.unshift({ id: Date.now(), actor: 'controller', action: 'exception:approved', entity_type: 'exception', entity_id: excId, detail: body, created_at: new Date().toISOString() });
-                    return { ok: true, status: 'approved', exception_id: excId };
-                }
-                if (path.includes('/reject')) {
-                    const idMatch = path.match(/\/api\/exceptions\/([^/]+)\/reject/);
-                    const excId = idMatch ? idMatch[1] : '';
-                    _mockExceptions = _mockExceptions.filter(e => e.id !== excId);
-                    MOCK_KPIS.exception_count = Math.max(0, (MOCK_KPIS.exception_count || 40) - 1);
-                    _mockAudit.unshift({ id: Date.now(), actor: 'controller', action: 'exception:rejected', entity_type: 'exception', entity_id: excId, detail: body, created_at: new Date().toISOString() });
-                    return { ok: true, status: 'rejected', exception_id: excId };
-                }
-                return _mockExceptions.filter(e => e.status === 'open');
-            }
-            if (path.includes('/api/anomalies')) return MOCK_ANOMALIES;
-            if (path.includes('/api/audit-log')) return _mockAudit;
-            if (path.includes('/api/reconcile/run')) return { total_processed: 1248, matched: 1208, review: 30, exceptions: _mockExceptions.length, match_rate: 0.968, health_score: 92, run_id: "seed-run" };
-            if (path.includes('/api/forecast/what-if')) {
-                const delay = body.delay_days || 0;
-                const exp = body.unexpected_expense || 0;
-                const scenario = body.scenario || _activeScenario || 'baseline';
-                const mult = scenario === 'optimistic' ? 1.35 : scenario === 'conservative' ? 0.72 : 1.0;
-
-                return {
-                    scenario: scenario,
-                    bars: MOCK_FORECAST.bars.map(bar => {
-                        const baseBal = bar.projected_balance * mult;
-                        const delayDeduction = delay * (3500 - bar.week_offset * 300);
-                        const expDeduction = (exp / (bar.week_offset + 1)) * 0.75;
-                        const newBalance = Math.round(baseBal - delayDeduction - expDeduction);
-                        return {
-                            ...bar,
-                            projected_balance: newBalance,
-                            height_pct: Math.max(12, Math.min(98, Math.round((Math.max(20000, newBalance) / 320000) * 100)))
-                        };
-                    })
-                };
-            }
-            if (path.includes('/api/forecast')) {
-                let scenario = 'baseline';
-                if (path.includes('scenario=optimistic')) scenario = 'optimistic';
-                if (path.includes('scenario=conservative')) scenario = 'conservative';
-                const mult = scenario === 'optimistic' ? 1.35 : scenario === 'conservative' ? 0.72 : 1.0;
-                return {
-                    scenario: scenario,
-                    bars: MOCK_FORECAST.bars.map(bar => {
-                        const bal = Math.round(bar.projected_balance * mult);
-                        return {
-                            ...bar,
-                            projected_balance: bal,
-                            height_pct: Math.max(15, Math.min(98, Math.round((bal / 320000) * 100)))
-                        };
-                    })
-                };
-            }
-            return { ok: true };
-        }
-
         async function apiGet(path) {
-            if (!API_BASE) return _getMock(path);
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
-                const res = await fetch(`${API_BASE}${path}`, {
-                    headers: { 'Content-Type': 'application/json' },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
-                return await res.json();
-            } catch (err) {
-                return _getMock(path);
+            if (_devMode()) {
+                if (path.includes('/api/kpis')) return MOCK_KPIS;
+                if (path.includes('/api/health-score')) return MOCK_HEALTH;
+                if (path.includes('/api/reconcile/records')) return MOCK_RECORDS;
+                if (path.includes('/api/exceptions')) return MOCK_EXCEPTIONS;
+                if (path.includes('/api/anomalies')) return MOCK_ANOMALIES;
+                if (path.includes('/api/audit-log')) return MOCK_AUDIT;
+                if (path.includes('/api/forecast')) return MOCK_FORECAST;
+                return {};
             }
+            const res = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' }
+            });
+            if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+            return res.json();
         }
 
         async function apiPost(path, body = {}) {
-            if (!API_BASE) return _getMock(path, body);
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
-                const res = await fetch(`${API_BASE}${path}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
-                return await res.json();
-            } catch (err) {
-                return _getMock(path, body);
+            if (_devMode()) {
+                if (path.includes('/api/reconcile/run')) {
+                    return { total_processed: 52, matched: 31, review: 14, exceptions: 7, match_rate: 0.783, health_score: 82, run_id: "dev-run" };
+                }
+                if (path.includes('/api/forecast/what-if')) {
+                    // Pre-compute basic what-if calculation visually for dev mode
+                    const delay = body.delay_days || 0;
+                    const exp = body.unexpected_expense || 0;
+                    return {
+                        scenario: 'what-if',
+                        bars: MOCK_FORECAST.bars.map(bar => {
+                            const newBalance = bar.projected_balance - (delay * 3000) - (bar.week_offset === 0 ? exp : 0);
+                            return { ...bar, projected_balance: newBalance, height_pct: Math.max(10, Math.min(95, bar.height_pct - (delay * 2) - (bar.week_offset === 0 ? exp / 2000 : 0))) };
+                        })
+                    };
+                }
+                return { ok: true };
             }
+            const res = await fetch(`${API_BASE}${path}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+            return res.json();
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -854,50 +828,40 @@
             } catch(e) { console.error('Health score load failed:', e); }
         }
 
-        let _allRecords = [];
-        let _masterRecords = [];
-        let _activeConfidenceFilter = 'ALL';
-
         async function loadRecords(statusFilter = 'ALL', sourceFilter = 'ALL', searchQ = '') {
             try {
                 let url = '/api/reconcile/records?limit=100';
-                if (statusFilter !== 'ALL') url += `&status=${encodeURIComponent(statusFilter)}`;
-                if (sourceFilter !== 'ALL') url += `&source=${encodeURIComponent(sourceFilter)}`;
+                if (statusFilter !== 'ALL') url += `&status=${statusFilter}`;
+                if (sourceFilter !== 'ALL') url += `&source=${sourceFilter}`;
                 if (searchQ) url += `&search=${encodeURIComponent(searchQ)}`;
 
                 const data = await apiGet(url);
-                _allRecords = (Array.isArray(data) && data.length > 0) ? data : MOCK_RECORDS;
-                _masterRecords = [...MOCK_RECORDS];
-                updateConfidenceCounts(_masterRecords);
-                filterRecords();
+                _allRecords = data;
+                renderTable(data);
+                updateConfidenceCounts(data);
             } catch(e) {
-                _masterRecords = [...MOCK_RECORDS];
-                updateConfidenceCounts(_masterRecords);
-                filterRecords();
+                document.getElementById('recordsTableBody').innerHTML =
+                    '<tr><td colspan="9" class="p-6 text-center text-ocean-red text-xs font-mono">API error — run reconciliation first or check backend.</td></tr>';
             }
         }
 
         function updateConfidenceCounts(records) {
             let high = 0, med = 0, low = 0;
-            (records || []).forEach(r => {
-                const val = parseFloat(r.confidence) || 0;
+            records.forEach(r => {
+                const val = parseFloat(r.confidence);
                 if (val >= 90) high++;
                 else if (val >= 70) med++;
                 else low++;
             });
-            const hEl = document.getElementById('highConfCount');
-            const mEl = document.getElementById('medConfCount');
-            const lEl = document.getElementById('lowConfCount');
-            if (hEl) hEl.textContent = `${high}`;
-            if (mEl) mEl.textContent = `${med}`;
-            if (lEl) lEl.textContent = `${low}`;
+            document.getElementById('highConfCount').textContent = `${high}`;
+            document.getElementById('medConfCount').textContent = `${med}`;
+            document.getElementById('lowConfCount').textContent = `${low}`;
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('recordsTableBody');
-            if (!tbody) return;
-            if (!data || !data.length) {
-                tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-ocean-textMuted text-xs font-mono">No financial records match the selected filters.</td></tr>';
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-ocean-textMuted text-xs font-mono">No records match filter. Run reconciliation to populate.</td></tr>';
                 return;
             }
             tbody.innerHTML = '';
@@ -914,87 +878,43 @@
                 tr.innerHTML = `
                     <td class="p-3 font-mono text-ocean-accent font-semibold">${rec.id}</td>
                     <td class="p-3 font-mono text-ocean-textMuted">${rec.date}</td>
-                    <td class="p-3"><span class="bg-ocean-bg px-2 py-0.5 rounded border border-ocean-cardBorder text-[10px] font-medium">${rec.source}</span></td>
+                    <td class="p-3"><span class="bg-ocean-bg px-2 py-0.5 rounded border border-ocean-cardBorder text-[10px]">${rec.source}</span></td>
                     <td class="p-3 font-medium text-ocean-text">${rec.description}</td>
                     <td class="p-3 font-mono font-bold">${rec.amount}</td>
                     <td class="p-3 font-mono text-ocean-textMuted">${rec.matched_record}</td>
                     <td class="p-3">${statusBadge}</td>
                     <td class="p-3 font-mono">${rec.confidence}</td>
-                    <td class="p-3 text-right"><button class="text-ocean-accent hover:underline text-xs font-semibold">Inspect →</button></td>
+                    <td class="p-3 text-right"><button class="text-ocean-accent hover:underline text-xs">Inspect →</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
         function filterRecords() {
-            const searchEl = document.getElementById('searchInput');
-            const sourceEl = document.getElementById('sourceFilter');
-            const statusEl = document.getElementById('statusFilter');
-
-            const search = (searchEl ? searchEl.value : '').toLowerCase().trim();
-            const source = (sourceEl ? sourceEl.value : 'ALL').trim();
-            const status = (statusEl ? statusEl.value : 'ALL').trim();
-
-            const pool = (_masterRecords && _masterRecords.length > 0) ? _masterRecords : MOCK_RECORDS;
-            
-            const filtered = pool.filter(r => {
-                // Match Source
-                if (source !== 'ALL' && (r.source || '').toLowerCase() !== source.toLowerCase()) {
-                    return false;
-                }
-                // Match Status
-                if (status !== 'ALL' && (r.status || '').toLowerCase() !== status.toLowerCase()) {
-                    return false;
-                }
-                // Match Confidence Tier
-                if (_activeConfidenceFilter !== 'ALL') {
-                    const val = parseFloat(r.confidence) || 0;
-                    if (_activeConfidenceFilter === 'HIGH' && val < 90) return false;
-                    if (_activeConfidenceFilter === 'MED' && (val < 70 || val >= 90)) return false;
-                    if (_activeConfidenceFilter === 'LOW' && val >= 70) return false;
-                }
-                // Match Search
-                if (search) {
-                    const idMatch = (r.id || '').toLowerCase().includes(search);
-                    const descMatch = (r.description || '').toLowerCase().includes(search);
-                    const recMatch = (r.matched_record || '').toLowerCase().includes(search);
-                    const amtMatch = (r.amount || '').toLowerCase().includes(search);
-                    if (!idMatch && !descMatch && !recMatch && !amtMatch) return false;
-                }
-                return true;
-            });
-
-            renderTable(filtered);
+            const search = document.getElementById('searchInput').value;
+            const source = document.getElementById('sourceFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            loadRecords(status, source, search);
         }
 
         function filterByConfidence(tier) {
-            if (_activeConfidenceFilter === tier) {
-                _activeConfidenceFilter = 'ALL';
-            } else {
-                _activeConfidenceFilter = tier;
-            }
-            ['HIGH', 'MED', 'LOW'].forEach(t => {
-                const btn = document.getElementById(`confBtn_${t}`);
-                if (btn) {
-                    if (t === _activeConfidenceFilter) {
-                        btn.classList.add('ring-2', 'ring-ocean-accent', 'scale-[1.02]', 'bg-ocean-accent/10');
-                    } else {
-                        btn.classList.remove('ring-2', 'ring-ocean-accent', 'scale-[1.02]', 'bg-ocean-accent/10');
-                    }
-                }
+            const filtered = _allRecords.filter(rec => {
+                const val = parseFloat(rec.confidence);
+                if (tier === 'HIGH') return val >= 90;
+                if (tier === 'MED') return val >= 70 && val < 90;
+                if (tier === 'LOW') return val < 70;
+                return true;
             });
-            filterRecords();
-            addLocalAuditEntry(`Filtered records by confidence: ${_activeConfidenceFilter}`);
+            renderTable(filtered);
+            addLocalAuditEntry(`Filtered by confidence: ${tier}`);
         }
 
         async function loadExceptions() {
             try {
                 const data = await apiGet('/api/exceptions?status=open&limit=6');
                 const container = document.getElementById('priorityExceptionsContainer');
-                if (!container) return;
-                if (!data || !data.length) {
-                    container.innerHTML = '<div class="p-6 border border-ocean-green/30 bg-ocean-green/5 rounded-xl text-center text-ocean-green text-xs font-mono col-span-1 lg:col-span-2 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i><span>All priority exceptions resolved. Queue clear.</span></div>';
-                    lucide.createIcons();
+                if (!data.length) {
+                    container.innerHTML = '<div class="p-5 border border-ocean-cardBorder rounded-xl text-center text-ocean-green text-xs font-mono col-span-2">✅ No open exceptions. All records reconciled.</div>';
                     return;
                 }
                 container.innerHTML = '';
@@ -1004,8 +924,7 @@
                     };
                     const color = priorityColors[exc.priority] || 'ocean-accent';
                     const excEl = document.createElement('div');
-                    excEl.id = `exc-card-${exc.id}`;
-                    excEl.className = 'bg-ocean-bg border border-ocean-cardBorder p-5 rounded-xl space-y-3 transition-all';
+                    excEl.className = 'bg-ocean-bg border border-ocean-cardBorder p-5 rounded-xl space-y-3';
                     excEl.innerHTML = `
                         <div class="flex justify-between items-start">
                             <div>
@@ -1016,111 +935,32 @@
                         </div>
                         <p class="text-xs text-ocean-textMuted">${exc.description || ''}</p>
                         <div class="flex items-center justify-between pt-2 border-t border-ocean-cardBorder">
-                            <span class="text-[10px] text-ocean-gold font-mono">Age: ${typeof exc.age_hours === 'number' ? exc.age_hours.toFixed(1) : '1.2'}h</span>
+                            <span class="text-[10px] text-ocean-gold font-mono">Age: ${exc.age_hours.toFixed(1)}h</span>
                             <div class="flex gap-2">
-                                <button onclick="approveException('${exc.id}', this)" class="px-3 py-1.5 bg-ocean-green/20 border border-ocean-green/40 text-ocean-green text-xs font-semibold rounded hover:bg-ocean-green hover:text-ocean-bg transition-all flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i><span>Approve</span></button>
-                                <button onclick="rejectException('${exc.id}', this)" class="px-3 py-1.5 bg-ocean-red/20 border border-ocean-red/40 text-ocean-red text-xs font-semibold rounded hover:bg-ocean-red hover:text-ocean-bg transition-all flex items-center gap-1"><i data-lucide="x" class="w-3.5 h-3.5"></i><span>Reject</span></button>
+                                <button onclick="approveException('${exc.id}', this)" class="px-3 py-1 bg-ocean-green/20 border border-ocean-green/40 text-ocean-green text-xs rounded hover:bg-ocean-green/30">Approve</button>
+                                <button onclick="rejectException('${exc.id}', this)" class="px-3 py-1 bg-ocean-red/20 border border-ocean-red/40 text-ocean-red text-xs rounded hover:bg-ocean-red/30">Reject</button>
                             </div>
                         </div>
                     `;
                     container.appendChild(excEl);
                 });
-                lucide.createIcons();
             } catch(e) { console.error('Exceptions load failed:', e); }
         }
 
         async function approveException(id, btn) {
-            const card = btn ? btn.closest('.bg-ocean-bg') : document.getElementById(`exc-card-${id}`);
-            if (card) {
-                card.style.pointerEvents = 'none';
-                btn.innerHTML = '<span class="animate-pulse">Approving…</span>';
-            }
             try {
-                await apiPost(`/api/exceptions/${id}/approve`, { note: 'Approved by Controller via Priority Command Center' });
-                showToast(`Exception ${id} approved & resolved`);
-                if (card) {
-                    gsap.to(card, {
-                        opacity: 0,
-                        y: -15,
-                        scale: 0.95,
-                        duration: 0.25,
-                        onComplete: async () => {
-                            card.remove();
-                            await Promise.all([
-                                loadKPIs(),
-                                loadExceptions(),
-                                loadAuditLog(),
-                                loadHealthScore()
-                            ]);
-                        }
-                    });
-                } else {
-                    await Promise.all([loadKPIs(), loadExceptions(), loadAuditLog(), loadHealthScore()]);
-                }
-                addLocalAuditEntry(`Exception ${id} APPROVED by Controller`);
-            } catch(e) {
-                if (card) card.style.pointerEvents = 'auto';
-                if (btn) btn.textContent = 'Approve';
-                showToast(`Error: ${e.message}`);
-            }
+                await apiPost(`/api/exceptions/${id}/approve`, { note: 'Approved via dashboard' });
+                btn.closest('.bg-ocean-bg').style.opacity = '0.4';
+                addLocalAuditEntry(`Exception ${id.substring(0, 8)} APPROVED`);
+            } catch(e) { alert('Approval failed — controller role required.'); }
         }
 
         async function rejectException(id, btn) {
-            const card = btn ? btn.closest('.bg-ocean-bg') : document.getElementById(`exc-card-${id}`);
-            if (card) {
-                card.style.pointerEvents = 'none';
-                btn.innerHTML = '<span class="animate-pulse">Rejecting…</span>';
-            }
             try {
-                await apiPost(`/api/exceptions/${id}/reject`, { note: 'Rejected by Controller via Priority Command Center' });
-                showToast(`Exception ${id} rejected`);
-                if (card) {
-                    gsap.to(card, {
-                        opacity: 0,
-                        y: -15,
-                        scale: 0.95,
-                        duration: 0.25,
-                        onComplete: async () => {
-                            card.remove();
-                            await Promise.all([
-                                loadKPIs(),
-                                loadExceptions(),
-                                loadAuditLog(),
-                                loadHealthScore()
-                            ]);
-                        }
-                    });
-                } else {
-                    await Promise.all([loadKPIs(), loadExceptions(), loadAuditLog(), loadHealthScore()]);
-                }
-                addLocalAuditEntry(`Exception ${id} REJECTED by Controller`);
-            } catch(e) {
-                if (card) card.style.pointerEvents = 'auto';
-                if (btn) btn.textContent = 'Reject';
-                showToast(`Error: ${e.message}`);
-            }
-        }
-
-        function showToast(msg) {
-            let toast = document.getElementById('financeToast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'financeToast';
-                toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-ocean-card border border-ocean-accent/40 text-ocean-accent px-4 py-2 rounded-full text-xs font-mono shadow-2xl flex items-center gap-2 pointer-events-none transition-all duration-300 opacity-0 translate-y-4';
-                document.body.appendChild(toast);
-            }
-            toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-ocean-accent animate-ping"></span> ${msg}`;
-            toast.style.opacity = '1';
-            toast.style.transform = 'translate(-50%, 0)';
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translate(-50%, 16px)';
-            }, 2600);
-        }
-
-        function toggleMobileMenu() {
-            const drawer = document.getElementById('mobileNavDrawer');
-            if (drawer) drawer.classList.toggle('hidden');
+                await apiPost(`/api/exceptions/${id}/reject`, { note: 'Rejected via dashboard' });
+                btn.closest('.bg-ocean-bg').style.opacity = '0.4';
+                addLocalAuditEntry(`Exception ${id.substring(0, 8)} REJECTED`);
+            } catch(e) { alert('Rejection failed — controller role required.'); }
         }
 
         async function loadAnomalies() {
@@ -1181,24 +1021,18 @@
 
         function updateForecastBars(bars) {
             if (!bars || !bars.length) return;
-            const container = document.getElementById('forecastBarsGrid');
-            if (!container) return;
-            container.innerHTML = '';
-            bars.forEach((bar) => {
-                const isPositive = bar.projected_balance >= 0;
-                const formattedAmount = `$${(Math.abs(bar.projected_balance) / 1000).toFixed(0)}k`;
-                const col = document.createElement('div');
-                col.className = 'flex flex-col items-center h-full justify-end group cursor-pointer';
-                col.title = `${bar.label}: ${isPositive ? '+' : '-'}${formattedAmount} ($${bar.projected_balance.toLocaleString()})`;
-                col.innerHTML = `
-                    <div class="text-[11px] sm:text-xs font-mono font-bold text-ocean-accent mb-2 group-hover:scale-110 transition-transform whitespace-nowrap">${isPositive ? '+' : '-'}${formattedAmount}</div>
-                    <div class="w-full bg-ocean-card/60 border border-ocean-cardBorder/80 rounded-xl h-44 flex items-end p-1 sm:p-1.5 overflow-hidden">
-                        <div class="w-full rounded-lg transition-all duration-500 forecast-bar ${isPositive ? 'bg-gradient-to-t from-ocean-accent/30 via-ocean-accent/60 to-ocean-accent border-t border-ocean-accent shadow-[0_0_12px_rgba(0,240,255,0.35)]' : 'bg-gradient-to-t from-ocean-red/30 via-ocean-red/60 to-ocean-red border-t border-ocean-red shadow-[0_0_12px_rgba(255,23,68,0.35)]'}"
-                             style="height: ${Math.max(15, Math.min(100, bar.height_pct))}%;"></div>
-                    </div>
-                    <div class="text-[10px] sm:text-[11px] font-mono text-ocean-textMuted mt-3 font-semibold group-hover:text-ocean-text transition-colors whitespace-nowrap">${bar.label}</div>
-                `;
-                container.appendChild(col);
+            const labelEl = document.getElementById('forecastLabels');
+            labelEl.innerHTML = bars.map(b => `<span>${b.label}</span>`).join('');
+            bars.forEach((bar, i) => {
+                const el = document.getElementById(`bar${i}`);
+                if (el) {
+                    el.style.height = `${bar.height_pct}%`;
+                    // Color by balance direction
+                    const color = bar.projected_balance >= 0 ? 'rgba(0,240,255,' : 'rgba(255,23,68,';
+                    const opacity = 0.3 + (bar.height_pct / 100) * 0.7;
+                    el.style.background = `${color}${opacity.toFixed(2)})`;
+                    el.title = `${bar.label}: ${bar.projected_balance >= 0 ? '+' : ''}${bar.projected_balance.toLocaleString()}`;
+                }
             });
         }
 
@@ -1256,61 +1090,28 @@
         // FORECAST / WHAT-IF
         // ════════════════════════════════════════════════════════════════════
 
-        let _activeScenario = 'baseline';
-        let whatIfDebounce = null;
-
         async function switchScenario(mode) {
-            _activeScenario = mode;
             ['Base','Opt','Cons'].forEach(s => {
                 const btn = document.getElementById(`scen${s}`);
-                if (btn) {
-                    const isSelected = mode === {Base:'baseline',Opt:'optimistic',Cons:'conservative'}[s];
-                    btn.className = 'px-3 py-1.5 rounded font-bold transition-all ' + (isSelected ? 'bg-ocean-accent text-ocean-bg shadow-[0_0_10px_rgba(0,240,255,0.4)]' : 'text-ocean-textMuted hover:text-ocean-text');
-                }
+                btn.className = 'px-3 py-1.5 rounded font-bold ' + (mode === {Base:'baseline',Opt:'optimistic',Cons:'conservative'}[s] ? 'bg-ocean-accent text-ocean-bg' : 'text-ocean-textMuted hover:text-ocean-text');
             });
-
-            const delay = parseInt(document.getElementById('delaySlider')?.value || 0);
-            const expense = parseInt(document.getElementById('expenseSlider')?.value || 0);
-            const grid = document.getElementById('forecastBarsGrid');
-            if (grid) grid.style.opacity = '0.5';
-
-            try {
-                let data;
-                if (delay > 0 || expense > 0) {
-                    data = await apiPost('/api/forecast/what-if', { delay_days: delay, unexpected_expense: expense, scenario: mode });
-                } else {
-                    data = await apiGet(`/api/forecast?scenario=${mode}`);
-                }
-                updateForecastBars(data.bars);
-            } catch(e) {
-                console.error('Scenario switch failed:', e);
-            } finally {
-                if (grid) grid.style.opacity = '1';
-            }
-
-            addLocalAuditEntry(`Forecast scenario switched to: ${mode.toUpperCase()}`);
+            await loadForecast(mode);
+            addLocalAuditEntry(`Forecast scenario: ${mode.toUpperCase()}`);
         }
 
+        let whatIfDebounce = null;
         async function runWhatIfSimulation() {
             const delay = parseInt(document.getElementById('delaySlider').value);
             const expense = parseInt(document.getElementById('expenseSlider').value);
             document.getElementById('delayVal').textContent = `${delay} Days Delay`;
             document.getElementById('expenseVal').textContent = `+$${expense.toLocaleString()} Expense`;
-
-            const grid = document.getElementById('forecastBarsGrid');
-            if (grid) grid.style.opacity = '0.6';
-
             clearTimeout(whatIfDebounce);
             whatIfDebounce = setTimeout(async () => {
                 try {
-                    const result = await apiPost('/api/forecast/what-if', { delay_days: delay, unexpected_expense: expense, scenario: _activeScenario });
+                    const result = await apiPost('/api/forecast/what-if', { delay_days: delay, unexpected_expense: expense });
                     updateForecastBars(result.bars);
-                } catch(e) {
-                    console.error('What-if failed:', e);
-                } finally {
-                    if (grid) grid.style.opacity = '1';
-                }
-            }, 200);
+                } catch(e) { console.error('What-if failed:', e); }
+            }, 300);
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -1364,37 +1165,7 @@
             addLocalAuditEntry('Exported reconciliation data as CSV.');
         }
 
-        async function exportAuditLog() {
-            try {
-                const data = await apiGet('/api/audit-log?limit=100');
-                const logEntries = (Array.isArray(data) && data.length) ? data : (_mockAudit || []);
-                const csvHeader = 'Timestamp,Action,Entity_Type,Entity_ID,Actor,Detail\n';
-                const csvRows = logEntries.map(e => {
-                    const time = e.created_at || new Date().toISOString();
-                    const action = (e.action || '').replace(/"/g, '""');
-                    const type = (e.entity_type || '').replace(/"/g, '""');
-                    const id = (e.entity_id || '').replace(/"/g, '""');
-                    const actor = (e.actor || 'controller').replace(/"/g, '""');
-                    const detail = JSON.stringify(e.detail || {}).replace(/"/g, '""');
-                    return `"${time}","${action}","${type}","${id}","${actor}","${detail}"`;
-                }).join('\n');
-
-                const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `financeos_audit_log_${new Date().toISOString().slice(0,10)}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                showToast('Audit log downloaded (CSV)');
-                addLocalAuditEntry('Downloaded immutable audit log as CSV.');
-            } catch(e) {
-                showToast('Failed to download audit log');
-            }
-        }
+        function exportAuditLog() { loadAuditLog(); addLocalAuditEntry('Refreshed audit log.'); }
 
         function openAICommandCenter() { document.getElementById('aiCommandModal').classList.remove('hidden'); }
         function closeAICommandCenter() { document.getElementById('aiCommandModal').classList.add('hidden'); }
@@ -1465,11 +1236,22 @@
         const cursor = document.getElementById('targetCursor');
         document.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
 
-        // ── Direct Dashboard Bootstrap on page load ───────────────────────
+        // ── Loading screen / auth check ───────────────────────────────────
         window.addEventListener('load', async () => {
             lucide.createIcons();
-            await initDashboard();
-            lucide.createIcons();
+            // Check for existing Supabase session
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                _authToken = session.access_token;
+                _currentUser = session.user;
+                document.getElementById('loginOverlay').classList.add('hidden');
+                initDashboard();
+            } else {
+                // Show login, hide loading screen
+                const loader = document.getElementById('loadingScreen');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }
         });
 
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
