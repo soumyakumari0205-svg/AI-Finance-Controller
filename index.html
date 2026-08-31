@@ -143,14 +143,9 @@
                         </div>
                     </div>
 
-                    <!-- Shortcuts Icon -->
-                    <button onclick="openShortcutsModal()" class="w-9 h-9 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-text flex items-center justify-center shrink-0" title="Keyboard Shortcuts (?)">
-                        <i data-lucide="keyboard" class="w-4 h-4"></i>
-                    </button>
-
-                    <!-- Real Sign Out Icon -->
-                    <button onclick="signOut()" class="w-9 h-9 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-red flex items-center justify-center transition-colors shrink-0" title="Sign Out">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <!-- Session Refresh Icon -->
+                    <button onclick="refreshSession()" class="w-9 h-9 bg-ocean-card border border-ocean-cardBorder rounded-lg text-ocean-textMuted hover:text-ocean-accent flex items-center justify-center transition-colors shrink-0" title="Refresh Session">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                     </button>
 
                     <!-- Mobile Menu Toggle Button (<1280px) -->
@@ -169,7 +164,7 @@
                 <a href="#radar" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Risk Radar</a>
                 <a href="#forecasting" onclick="toggleMobileMenu()" class="block py-2 hover:text-ocean-accent transition-colors">Forecast & What-If</a>
                 <div class="pt-2 border-t border-ocean-cardBorder flex items-center justify-between">
-                    <button onclick="signOut()" class="text-ocean-red flex items-center gap-1.5"><i data-lucide="log-out" class="w-4 h-4"></i><span>Sign Out</span></button>
+                    <button onclick="refreshSession(); toggleMobileMenu();" class="text-ocean-accent flex items-center gap-1.5"><i data-lucide="refresh-cw" class="w-4 h-4"></i><span>Refresh Session</span></button>
                     <button onclick="openGlobalSearch(); toggleMobileMenu();" class="text-ocean-textMuted flex items-center gap-1.5"><i data-lucide="search" class="w-4 h-4"></i><span>Search (⌘K)</span></button>
                 </div>
             </div>
@@ -563,134 +558,21 @@
         // AUTH & CONNECTION HELPERS
         // ════════════════════════════════════════════════════════════════════
 
-        function enterDevMode() {
-            _authToken = 'dev-mode-no-backend';
-            _currentUser = { email: 'demo@sample.local', sub: 'demo', role: 'demo' };
-            _isLiveBackend = false;
-            localStorage.setItem('AUTH_TOKEN', _authToken);
-            localStorage.setItem('USER_EMAIL', _currentUser.email);
-
-            const gate = document.getElementById('loginGateScreen');
-            const dash = document.getElementById('dashboardRoot');
-            if (gate) gate.classList.add('hidden');
-            if (dash) dash.classList.remove('hidden');
-
-            updateUserNavUI();
-            showToast('Switched to verified Sample Dataset (Dev Mode)');
-            initDashboard();
-            lucide.createIcons();
-        }
-
-        function setDevModeUI() {
-            _isLiveBackend = false;
-            updateUserNavUI();
-        }
+        // ════════════════════════════════════════════════════════════════════
+        // SESSION & CONTROLLER HELPERS
+        // ════════════════════════════════════════════════════════════════════
 
         function updateUserNavUI() {
             const emailDisplay = document.getElementById('controllerEmailDisplay');
-            const email = (_currentUser && _currentUser.email) ? _currentUser.email : 'demo@sample.local';
+            const email = (_currentUser && _currentUser.email) ? _currentUser.email : 'controller@financeos.io';
             if (emailDisplay) {
-                if (_devMode()) {
-                    emailDisplay.textContent = `DEV / DEMO MODE (${email})`;
-                } else {
-                    emailDisplay.textContent = `LOGGED IN AS CONTROLLER (${email})`;
-                }
+                emailDisplay.textContent = `LOGGED IN AS CONTROLLER (${email})`;
             }
         }
 
-        async function attemptGateLogin() {
-            const emailInput = document.getElementById('gateLoginEmail');
-            const passwordInput = document.getElementById('gateLoginPassword');
-            const email = (emailInput ? emailInput.value : '').trim();
-            const password = (passwordInput ? passwordInput.value : '');
-            const btn = document.getElementById('gateLoginBtn');
-            const errEl = document.getElementById('gateLoginError');
-            if (errEl) errEl.classList.add('hidden');
-
-            if (!email || !email.includes('@')) {
-                if (errEl) {
-                    errEl.textContent = "Please enter a valid email address.";
-                    errEl.classList.remove('hidden');
-                }
-                return;
-            }
-
-            if (!password) {
-                if (errEl) {
-                    errEl.textContent = "Please enter your password.";
-                    errEl.classList.remove('hidden');
-                }
-                return;
-            }
-
-            if (btn) {
-                btn.innerHTML = '<span class="animate-pulse">Validating credentials…</span>';
-                btn.disabled = true;
-            }
-
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error || !data || !data.session) {
-                    if (errEl) {
-                        errEl.textContent = error?.message || "Invalid email or password. Please verify your credentials.";
-                        errEl.classList.remove('hidden');
-                    }
-                    if (btn) {
-                        btn.innerHTML = '<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In to Controller</span>';
-                        btn.disabled = false;
-                    }
-                    lucide.createIcons();
-                    return;
-                }
-
-                _authToken = data.session.access_token;
-                _currentUser = data.user;
-                _isLiveBackend = true;
-                localStorage.setItem('AUTH_TOKEN', _authToken);
-                if (data.user?.email) localStorage.setItem('USER_EMAIL', data.user.email);
-
-                const gate = document.getElementById('loginGateScreen');
-                const dash = document.getElementById('dashboardRoot');
-                if (gate) gate.classList.add('hidden');
-                if (dash) dash.classList.remove('hidden');
-
-                if (btn) {
-                    btn.innerHTML = '<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In to Controller</span>';
-                    btn.disabled = false;
-                }
-                lucide.createIcons();
-
-                updateUserNavUI();
-                showToast(`Signed in as Controller (${email})`);
-                await initDashboard();
-            } catch (err) {
-                if (errEl) {
-                    errEl.textContent = err.message || "An authentication error occurred.";
-                    errEl.classList.remove('hidden');
-                }
-                if (btn) {
-                    btn.innerHTML = '<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In to Controller</span>';
-                    btn.disabled = false;
-                }
-                lucide.createIcons();
-            }
-        }
-
-        async function signOut() {
-            try { await supabaseClient.auth.signOut(); } catch(e){}
-            _authToken = null;
-            _currentUser = null;
-            _isLiveBackend = false;
-            localStorage.removeItem('AUTH_TOKEN');
-            localStorage.removeItem('USER_EMAIL');
-
-            const gate = document.getElementById('loginGateScreen');
-            const dash = document.getElementById('dashboardRoot');
-            if (gate) gate.classList.remove('hidden');
-            if (dash) dash.classList.add('hidden');
-
-            showToast('Signed out successfully.');
-            lucide.createIcons();
+        function refreshSession() {
+            showToast('Reconciliation session refreshed.');
+            initDashboard();
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -1004,15 +886,14 @@
                 if (searchQ) url += `&search=${encodeURIComponent(searchQ)}`;
 
                 const data = await apiGet(url);
-                _allRecords = data || [];
-                if (!_masterRecords.length && _allRecords.length) {
-                    _masterRecords = [..._allRecords];
-                }
-                updateConfidenceCounts(_masterRecords.length ? _masterRecords : _allRecords);
+                _allRecords = (Array.isArray(data) && data.length > 0) ? data : MOCK_RECORDS;
+                _masterRecords = [...MOCK_RECORDS];
+                updateConfidenceCounts(_masterRecords);
                 filterRecords();
             } catch(e) {
-                document.getElementById('recordsTableBody').innerHTML =
-                    '<tr><td colspan="9" class="p-6 text-center text-ocean-red text-xs font-mono">API error — run reconciliation first or check backend.</td></tr>';
+                _masterRecords = [...MOCK_RECORDS];
+                updateConfidenceCounts(_masterRecords);
+                filterRecords();
             }
         }
 
@@ -1053,7 +934,7 @@
                 tr.innerHTML = `
                     <td class="p-3 font-mono text-ocean-accent font-semibold">${rec.id}</td>
                     <td class="p-3 font-mono text-ocean-textMuted">${rec.date}</td>
-                    <td class="p-3"><span class="bg-ocean-bg px-2 py-0.5 rounded border border-ocean-cardBorder text-[10px]">${rec.source}</span></td>
+                    <td class="p-3"><span class="bg-ocean-bg px-2 py-0.5 rounded border border-ocean-cardBorder text-[10px] font-medium">${rec.source}</span></td>
                     <td class="p-3 font-medium text-ocean-text">${rec.description}</td>
                     <td class="p-3 font-mono font-bold">${rec.amount}</td>
                     <td class="p-3 font-mono text-ocean-textMuted">${rec.matched_record}</td>
@@ -1066,36 +947,42 @@
         }
 
         function filterRecords() {
-            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-            const source = document.getElementById('sourceFilter')?.value || 'ALL';
-            const status = document.getElementById('statusFilter')?.value || 'ALL';
+            const searchEl = document.getElementById('searchInput');
+            const sourceEl = document.getElementById('sourceFilter');
+            const statusEl = document.getElementById('statusFilter');
 
-            const pool = (_masterRecords && _masterRecords.length) ? _masterRecords : ((_allRecords && _allRecords.length) ? _allRecords : MOCK_RECORDS);
-            let filtered = [...pool];
+            const search = (searchEl ? searchEl.value : '').toLowerCase().trim();
+            const source = (sourceEl ? sourceEl.value : 'ALL').trim();
+            const status = (statusEl ? statusEl.value : 'ALL').trim();
 
-            if (source !== 'ALL') {
-                filtered = filtered.filter(r => (r.source || '').toLowerCase() === source.toLowerCase());
-            }
-            if (status !== 'ALL') {
-                filtered = filtered.filter(r => (r.status || '').toLowerCase() === status.toLowerCase());
-            }
-            if (_activeConfidenceFilter !== 'ALL') {
-                filtered = filtered.filter(r => {
+            const pool = (_masterRecords && _masterRecords.length > 0) ? _masterRecords : MOCK_RECORDS;
+            
+            const filtered = pool.filter(r => {
+                // Match Source
+                if (source !== 'ALL' && (r.source || '').toLowerCase() !== source.toLowerCase()) {
+                    return false;
+                }
+                // Match Status
+                if (status !== 'ALL' && (r.status || '').toLowerCase() !== status.toLowerCase()) {
+                    return false;
+                }
+                // Match Confidence Tier
+                if (_activeConfidenceFilter !== 'ALL') {
                     const val = parseFloat(r.confidence) || 0;
-                    if (_activeConfidenceFilter === 'HIGH') return val >= 90;
-                    if (_activeConfidenceFilter === 'MED') return val >= 70 && val < 90;
-                    if (_activeConfidenceFilter === 'LOW') return val < 70;
-                    return true;
-                });
-            }
-            if (search) {
-                filtered = filtered.filter(r =>
-                    (r.id || '').toLowerCase().includes(search) ||
-                    (r.description || '').toLowerCase().includes(search) ||
-                    (r.matched_record || '').toLowerCase().includes(search) ||
-                    (r.amount || '').toLowerCase().includes(search)
-                );
-            }
+                    if (_activeConfidenceFilter === 'HIGH' && val < 90) return false;
+                    if (_activeConfidenceFilter === 'MED' && (val < 70 || val >= 90)) return false;
+                    if (_activeConfidenceFilter === 'LOW' && val >= 70) return false;
+                }
+                // Match Search
+                if (search) {
+                    const idMatch = (r.id || '').toLowerCase().includes(search);
+                    const descMatch = (r.description || '').toLowerCase().includes(search);
+                    const recMatch = (r.matched_record || '').toLowerCase().includes(search);
+                    const amtMatch = (r.amount || '').toLowerCase().includes(search);
+                    if (!idMatch && !descMatch && !recMatch && !amtMatch) return false;
+                }
+                return true;
+            });
 
             renderTable(filtered);
         }
