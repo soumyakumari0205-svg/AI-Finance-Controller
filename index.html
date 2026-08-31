@@ -6,7 +6,10 @@
     <title>AI Finance Controller | Autonomous Financial Verification OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/ogl"></script>
+    <script type="module">
+        import * as OGL from 'https://cdn.jsdelivr.net/npm/ogl@1.0.11/src/index.js';
+        window.ElasticMeshOGL = OGL;
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script>
         tailwind.config = {
@@ -53,6 +56,10 @@
         #targetCursor { pointer-events: none; position: fixed; width: 24px; height: 24px; border: 2px solid #00F0FF; border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.15s, height 0.15s, border-color 0.15s; z-index: 9999; box-shadow: 0 0 10px rgba(0,240,255,0.5); }
         .elastic-mesh-container { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; overflow: hidden; pointer-events: none; }
         .elastic-mesh-container canvas { display: block; width: 100%; height: 100%; pointer-events: auto; }
+        .site-mesh-section { position: relative; isolation: isolate; }
+        .site-mesh-section > *:not(.site-mesh-container) { position: relative; z-index: 1; }
+        .site-mesh-container { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 0; }
+        .site-mesh-container canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
         .warp-text-container { position: relative; display: inline-block; width: 100%; height: auto; vertical-align: middle; }
         .warp-text-container canvas { display: block; width: 100%; height: auto; }
         .bento-section { position: relative; user-select: none; }
@@ -190,7 +197,8 @@
         </div>
     </section>
 
-    <section id="features" class="py-20 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section">
+    <section id="features" class="py-20 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section site-mesh-section">
+        <div id="featuresMeshContainer" class="site-mesh-container opacity-20"></div>
         <div class="mb-12 text-center space-y-3">
             <div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Real Backend Architecture</div>
             <h2 class="text-3xl lg:text-4xl font-extrabold text-ocean-text">Autonomous Controller Engine Capabilities</h2>
@@ -206,7 +214,8 @@
         </div>
     </section>
 
-    <section id="brief" class="py-16 border-t border-ocean-cardBorder bg-ocean-card/30 px-6">
+    <section id="brief" class="py-16 border-t border-ocean-cardBorder bg-ocean-card/30 px-6 site-mesh-section">
+        <div id="briefMeshContainer" class="site-mesh-container opacity-15"></div>
         <div class="max-w-7xl mx-auto space-y-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -265,7 +274,8 @@
         </div>
     </section>
 
-    <section class="py-10 border-b border-ocean-cardBorder bg-ocean-bg px-6">
+    <section class="py-10 border-b border-ocean-cardBorder bg-ocean-bg px-6 site-mesh-section">
+        <div id="timeTravelMeshContainer" class="site-mesh-container opacity-15"></div>
         <div class="max-w-7xl mx-auto space-y-4">
             <div class="flex justify-between items-center text-xs font-mono">
                 <span class="text-ocean-accent font-bold uppercase tracking-widest flex items-center gap-2"><i data-lucide="history" class="w-4 h-4"></i> Time Travel Finance Controller</span>
@@ -280,7 +290,8 @@
         </div>
     </section>
 
-    <section id="demo" class="py-16 px-6 max-w-7xl mx-auto scroll-mt-20">
+    <section id="demo" class="py-16 px-6 max-w-7xl mx-auto scroll-mt-20 site-mesh-section">
+        <div id="demoMeshContainer" class="site-mesh-container opacity-15"></div>
         <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 ocean-glow relative">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-ocean-cardBorder">
                 <div>
@@ -364,7 +375,8 @@
         <div id="panelContent" class="mt-6 space-y-6"></div>
     </div>
 
-    <section id="exceptions" class="py-16 px-6 max-w-7xl mx-auto">
+    <section id="exceptions" class="py-16 px-6 max-w-7xl mx-auto site-mesh-section">
+        <div id="exceptionsMeshContainer" class="site-mesh-container opacity-15"></div>
         <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 space-y-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div><div class="text-xs font-bold text-ocean-red uppercase tracking-widest">WHAT NEEDS ATTENTION NOW</div><h2 class="text-2xl lg:text-3xl font-extrabold text-ocean-text mt-1">Priority Exception Command Center</h2></div>
@@ -376,7 +388,8 @@
         </div>
     </section>
 
-    <section id="radar" class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section">
+    <section id="radar" class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section site-mesh-section">
+        <div id="radarMeshContainer" class="site-mesh-container opacity-15"></div>
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div class="lg:col-span-7 bg-ocean-card border border-ocean-cardBorder p-6 rounded-2xl space-y-6">
                 <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Multi-Dimensional Assessment</div><h3 class="text-xl font-bold text-ocean-text mt-1">AI Risk Radar</h3></div>
@@ -397,7 +410,8 @@
         </div>
     </section>
 
-    <section class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section">
+    <section class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder bento-section site-mesh-section">
+        <div id="anomaliesMeshContainer" class="site-mesh-container opacity-15"></div>
         <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 space-y-6">
             <div><div class="text-xs font-bold text-ocean-amber uppercase tracking-widest">Automated Pattern Analysis</div><h2 class="text-2xl font-extrabold text-ocean-text mt-1">AI Detected Anomalies</h2></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs bento-grid-target" id="anomaliesGrid">
@@ -406,8 +420,8 @@
         </div>
     </section>
 
-    <section id="forecasting" class="relative py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder overflow-hidden">
-        <div id="forecastingMeshContainer" class="elastic-mesh-container opacity-15"></div>
+    <section id="forecasting" class="relative py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder overflow-hidden site-mesh-section">
+        <div id="forecastingMeshContainer" class="site-mesh-container opacity-15"></div>
         <div class="bg-ocean-card/90 border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 space-y-8 backdrop-blur-md relative z-10">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Predictive Financial Modeling</div><div id="forecastHeaderWarp" class="warp-text-container text-2xl lg:text-3xl font-extrabold text-ocean-text mt-1">Cash Forecast & What-If Scenario Simulator</div></div>
@@ -445,7 +459,8 @@
         </div>
     </section>
 
-    <section class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder">
+    <section class="py-16 px-6 max-w-7xl mx-auto border-t border-ocean-cardBorder site-mesh-section">
+        <div id="auditMeshContainer" class="site-mesh-container opacity-15"></div>
         <div class="bg-ocean-card border border-ocean-cardBorder rounded-2xl p-6 lg:p-8 space-y-6">
             <div class="flex justify-between items-center">
                 <div><div class="text-xs font-bold text-ocean-accent uppercase tracking-widest">Immutable Log</div><h2 class="text-xl font-bold text-ocean-text mt-1">AI Activity Log & Decision Audit Trail</h2></div>
@@ -521,11 +536,43 @@
         // ════════════════════════════════════════════════════════════════════
         // CONFIGURATION & STATE
         // ════════════════════════════════════════════════════════════════════
-        const API_BASE = window.FINANCE_OS_API_URL || (localStorage.getItem('FINANCE_API_BASE') || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : ''));
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:8000' : '';
 
         function refreshSession() {
             showToast('Reconciliation state refreshed.');
             initDashboard();
+        }
+
+        // Lightweight feedback for static GitHub Pages and the live API mode.
+        // Keep this self-contained so action handlers never depend on a missing
+        // third-party toast library.
+        function showToast(message, type = 'success') {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'fixed top-20 right-4 z-[100] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2 pointer-events-none';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const isError = type === 'error';
+            toast.className = `pointer-events-auto flex items-start gap-2 rounded-xl border px-4 py-3 text-xs font-medium shadow-2xl transition-all duration-200 ${isError ? 'border-ocean-red/40 bg-ocean-red/10 text-ocean-red' : 'border-ocean-green/40 bg-ocean-green/10 text-ocean-green'}`;
+            toast.setAttribute('role', 'status');
+
+            const icon = document.createElement('span');
+            icon.textContent = isError ? '!' : '✓';
+            icon.className = 'mt-px font-bold';
+            const text = document.createElement('span');
+            text.textContent = message;
+            toast.append(icon, text);
+            container.appendChild(toast);
+
+            window.requestAnimationFrame(() => toast.classList.remove('opacity-0', 'translate-y-2'));
+            window.setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                window.setTimeout(() => toast.remove(), 220);
+            }, 3200);
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -579,7 +626,7 @@
             {week_offset:0,label:'Week 1',projected_balance:124000,height_pct:52},
             {week_offset:1,label:'Week 2',projected_balance:187000,height_pct:72},
             {week_offset:2,label:'Week 3',projected_balance:145000,height_pct:60},
-            {week_offset:4,label:'Week 4',projected_balance:210000,height_pct:84},
+            {week_offset:3,label:'Week 4',projected_balance:210000,height_pct:84},
             {week_offset:4,label:'Week 5',projected_balance:165000,height_pct:67},
             {week_offset:5,label:'Week 6',projected_balance:238000,height_pct:93},
         ]};
@@ -646,19 +693,15 @@
             if (!API_BASE) return _getMock(path);
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
                 const res = await fetch(`${API_BASE}${path}`, {
                     headers: { 'Content-Type': 'application/json' },
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (!res.ok) {
-                    const errBody = await res.json().catch(() => ({}));
-                    throw new Error(errBody.detail || `API ${path} → ${res.status}`);
-                }
+                if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
                 return await res.json();
             } catch (err) {
-                if (API_BASE && window.location.hostname === 'localhost') throw err;
                 return _getMock(path);
             }
         }
@@ -667,7 +710,7 @@
             if (!API_BASE) return _getMock(path, body);
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
                 const res = await fetch(`${API_BASE}${path}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -675,36 +718,9 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (!res.ok) {
-                    const errBody = await res.json().catch(() => ({}));
-                    throw new Error(errBody.detail || `API ${path} → ${res.status}`);
-                }
+                if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
                 return await res.json();
             } catch (err) {
-                if (API_BASE && window.location.hostname === 'localhost') throw err;
-                return _getMock(path, body);
-            }
-        }
-
-        async function apiPatch(path, body = {}) {
-            if (!API_BASE) return _getMock(path, body);
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
-                const res = await fetch(`${API_BASE}${path}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!res.ok) {
-                    const errBody = await res.json().catch(() => ({}));
-                    throw new Error(errBody.detail || `API ${path} → ${res.status}`);
-                }
-                return await res.json();
-            } catch (err) {
-                if (API_BASE && window.location.hostname === 'localhost') throw err;
                 return _getMock(path, body);
             }
         }
@@ -712,9 +728,10 @@
         // ════════════════════════════════════════════════════════════════════
         // DASHBOARD INITIALISATION
         // ════════════════════════════════════════════════════════════════════
+        let _allRecords = [];
         let _masterRecords = [];
+        let _auditLog = [];
         let _activeConfidenceFilter = 'ALL';
-        let _activeTimeWindow = 'all';
 
         async function initDashboard() {
             // Hide loading screen
@@ -725,8 +742,37 @@
             }
 
             // Start visual effects
-            initElasticMesh('elasticMeshContainer', { color1: '#00F0FF', color2: '#050B14', gridColor: '#00F0FF', gridOpacity: 0.35, gridDensity: 22, tilt: 14, shading: 0.5, wobble: 5, stiffness: 0.05, damping: 0.2 });
-            initElasticMesh('forecastingMeshContainer', { color1: '#00F0FF', color2: '#0A1424', gridColor: '#00F0FF', gridOpacity: 0.15, gridDensity: 16, tilt: 6, shading: 0.2, wobble: 2, stiffness: 0.03, damping: 0.3, interaction: 'hover' });
+            const meshBase = {
+                showGrid: true,
+                gridDensity: 16,
+                gridOpacity: 0.2,
+                gridColor: '#00D9FF',
+                highlight: '#B7F7FF',
+                borderRadius: 28,
+                stiffness: 0.045,
+                damping: 0.24,
+                pull: 0.28,
+                wobble: 3.5,
+                tilt: 8,
+                shading: 0.65,
+                resolution: window.innerWidth <= 768 ? 8 : 14,
+                interaction: 'none',
+                enabled: false,
+                fps: 24,
+                paused: prefersReducedMotion,
+            };
+            [
+                ['featuresMeshContainer', { color1: '#08283C', color2: '#0A1026', gridColor: '#00F0FF', tilt: 7 }],
+                ['briefMeshContainer', { color1: '#17133A', color2: '#061E37', gridColor: '#8B5CF6', tilt: 5 }],
+                ['timeTravelMeshContainer', { color1: '#062C3B', color2: '#0A172B', gridColor: '#22D3EE', tilt: 4 }],
+                ['demoMeshContainer', { color1: '#06263C', color2: '#111942', gridColor: '#00F0FF', tilt: 7 }],
+                ['exceptionsMeshContainer', { color1: '#35152A', color2: '#10172F', gridColor: '#FB7185', tilt: 8 }],
+                ['radarMeshContainer', { color1: '#0B2942', color2: '#101C3C', gridColor: '#67E8F9', tilt: 9 }],
+                ['anomaliesMeshContainer', { color1: '#302016', color2: '#14162D', gridColor: '#FBBF24', tilt: 6 }],
+                ['auditMeshContainer', { color1: '#062D3C', color2: '#16132F', gridColor: '#00D9FF', tilt: 5 }],
+            ].forEach(([id, theme]) => initElasticMesh(id, { ...meshBase, ...theme }));
+            initElasticMesh('elasticMeshContainer', { color1: '#00F0FF', color2: '#050B14', gridColor: '#00F0FF', gridOpacity: 0.35, gridDensity: 22, tilt: 14, shading: 0.5, wobble: 5, stiffness: 0.05, damping: 0.2, fps: 30, paused: prefersReducedMotion });
+            initElasticMesh('forecastingMeshContainer', { color1: '#00F0FF', color2: '#0A1424', gridColor: '#00F0FF', gridOpacity: 0.18, gridDensity: 16, tilt: 6, shading: 0.28, wobble: 2, stiffness: 0.03, damping: 0.3, interaction: 'none', enabled: false, fps: 24, paused: prefersReducedMotion });
             initWarpText('heroHeadlineWarp', { text: 'AI Finance Controller', warpStrength: 0.35, pointerStrength: 0.55, fontSize: 52 });
             initWarpText('opsHeaderWarp', { text: 'Live Reconciliation Workspace', warpStrength: 0.2, pointerStrength: 0.3, fontSize: 28 });
             initWarpText('forecastHeaderWarp', { text: 'Cash Forecast & What-If Scenario Simulator', warpStrength: 0.2, pointerStrength: 0.3, fontSize: 28 });
@@ -772,9 +818,7 @@
                 const reconRisk = 100 - data.match_rate;
                 setRiskBar('riskReconPct', 'riskReconBar', reconRisk.toFixed(1), reconRisk > 10 ? 'ocean-amber' : 'ocean-green');
                 setRiskBar('riskExcPct', 'riskExcBar', excRisk.toFixed(1), excRisk > 5 ? 'ocean-red' : 'ocean-green');
-            } catch(e) {
-                console.error('KPI load failed:', e);
-            }
+            } catch(e) { console.error('KPI load failed:', e); }
         }
 
         function setRiskBar(pctId, barId, pct, color) {
@@ -808,19 +852,19 @@
                     const qualRisk = 100 - data.quality_score * 100;
                     setRiskBar('riskQualPct', 'riskQualBar', qualRisk.toFixed(1), qualRisk > 5 ? 'ocean-amber' : 'ocean-accent');
                 }
-            } catch(e) {
-                console.error('Health score load failed:', e);
-            }
+            } catch(e) { console.error('Health score load failed:', e); }
         }
 
         async function loadRecords() {
             try {
                 const data = await apiGet('/api/reconcile/records?limit=100');
-                _masterRecords = (Array.isArray(data) && data.length > 0) ? data : MOCK_RECORDS;
+                _allRecords = (Array.isArray(data) && data.length > 0) ? data : [...MOCK_RECORDS];
+                _masterRecords = _allRecords;
                 updateConfidenceCounts(_masterRecords);
                 filterRecords();
             } catch(e) {
-                _masterRecords = [...MOCK_RECORDS];
+                _allRecords = [...MOCK_RECORDS];
+                _masterRecords = _allRecords;
                 updateConfidenceCounts(_masterRecords);
                 filterRecords();
             }
@@ -885,44 +929,30 @@
             const status = (statusEl ? statusEl.value : 'ALL').trim();
 
             const pool = (_masterRecords && _masterRecords.length > 0) ? _masterRecords : MOCK_RECORDS;
-            const refDate = new Date('2026-08-30');
             
             const filtered = pool.filter(r => {
-                // 1. Match Source
+                // Match Source
                 if (source !== 'ALL' && (r.source || '').toLowerCase() !== source.toLowerCase()) {
                     return false;
                 }
-                // 2. Match Status
+                // Match Status
                 if (status !== 'ALL' && (r.status || '').toLowerCase() !== status.toLowerCase()) {
                     return false;
                 }
-                // 3. Match Confidence Tier
+                // Match Confidence Tier
                 if (_activeConfidenceFilter !== 'ALL') {
                     const val = parseFloat(r.confidence) || 0;
                     if (_activeConfidenceFilter === 'HIGH' && val < 90) return false;
                     if (_activeConfidenceFilter === 'MED' && (val < 70 || val >= 90)) return false;
                     if (_activeConfidenceFilter === 'LOW' && val >= 70) return false;
                 }
-                // 4. Match Time Window
-                if (_activeTimeWindow && _activeTimeWindow !== 'all') {
-                    const recDate = new Date(r.date);
-                    if (!isNaN(recDate.getTime())) {
-                        const diffDays = Math.round((recDate.getTime() - refDate.getTime()) / (1000 * 3600 * 24));
-                        if (_activeTimeWindow === 'today' && Math.abs(diffDays) > 2) return false;
-                        if (_activeTimeWindow === 'past_30' && (diffDays < -30 || diffDays > 1)) return false;
-                        if (_activeTimeWindow === 'next_7' && (diffDays < 0 || diffDays > 7)) return false;
-                        if (_activeTimeWindow === 'next_30' && (diffDays < 0 || diffDays > 30)) return false;
-                    }
-                }
-                // 5. Match Search (combined AND logic)
+                // Match Search
                 if (search) {
                     const idMatch = (r.id || '').toLowerCase().includes(search);
                     const descMatch = (r.description || '').toLowerCase().includes(search);
                     const recMatch = (r.matched_record || '').toLowerCase().includes(search);
                     const amtMatch = (r.amount || '').toLowerCase().includes(search);
-                    const statusMatch = (r.status || '').toLowerCase().includes(search);
-                    const srcMatch = (r.source || '').toLowerCase().includes(search);
-                    if (!idMatch && !descMatch && !recMatch && !amtMatch && !statusMatch && !srcMatch) return false;
+                    if (!idMatch && !descMatch && !recMatch && !amtMatch) return false;
                 }
                 return true;
             });
@@ -978,12 +1008,12 @@
         }
 
         async function loadExceptions() {
-            const container = document.getElementById('priorityExceptionsContainer');
-            if (!container) return;
             try {
-                const data = await apiGet('/api/exceptions?status=open&limit=10');
+                const data = await apiGet('/api/exceptions?status=open&limit=6');
+                const container = document.getElementById('priorityExceptionsContainer');
+                if (!container) return;
                 if (!data || !data.length) {
-                    container.innerHTML = '<div class="p-6 border border-ocean-green/30 bg-ocean-green/5 rounded-xl text-center text-ocean-green text-xs font-mono col-span-1 lg:col-span-2 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i><span>No open exceptions. All records reconciled.</span></div>';
+                    container.innerHTML = '<div class="p-6 border border-ocean-green/30 bg-ocean-green/5 rounded-xl text-center text-ocean-green text-xs font-mono col-span-1 lg:col-span-2 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i><span>All priority exceptions resolved. Queue clear.</span></div>';
                     lucide.createIcons();
                     return;
                 }
@@ -1016,88 +1046,68 @@
                     container.appendChild(excEl);
                 });
                 lucide.createIcons();
-            } catch(e) {
-                console.error('Exceptions load failed:', e);
-                container.innerHTML = `<div class="p-6 border border-ocean-red/30 bg-ocean-red/5 rounded-xl text-center text-ocean-red text-xs font-mono col-span-1 lg:col-span-2">Unable to load exceptions from API. <button onclick="loadExceptions()" class="underline font-bold ml-1">Retry</button></div>`;
-            }
+            } catch(e) { console.error('Exceptions load failed:', e); }
         }
 
-        async function approveException(id, btn) {
-            const card = btn ? btn.closest('.bg-ocean-bg') : document.getElementById(`exc-card-${id}`);
-            const originalContent = btn ? btn.innerHTML : '';
+        async function resolveException(id, btn, decision) {
+            const card = btn ? btn.closest('[id^="exc-card-"]') : document.getElementById(`exc-card-${id}`);
+            const actionLabel = decision === 'approve' ? 'Approving…' : 'Rejecting…';
+            const actionText = decision === 'approve' ? 'Approve' : 'Reject';
+            const endpoint = `/api/exceptions/${id}/${decision}`;
+
             if (btn) {
-                btn.innerHTML = '<span class="animate-pulse">Approving…</span>';
+                btn.innerHTML = `<span class="animate-pulse">${actionLabel}</span>`;
                 btn.disabled = true;
+                const sibling = btn.parentElement?.querySelectorAll('button');
+                sibling?.forEach(button => { button.disabled = true; });
             }
+
             try {
-                await apiPost(`/api/exceptions/${id}/approve`, { note: 'Approved by Controller' });
+                const note = decision === 'approve' ? 'Approved by Controller' : 'Rejected by Controller';
+                await apiPost(endpoint, { note });
                 _mockExceptions = _mockExceptions.filter(e => e.id !== id);
-                MOCK_KPIS.exception_count = Math.max(0, _mockExceptions.length);
-                MOCK_KPIS.auto_resolved = (MOCK_KPIS.auto_resolved || 0) + 1;
-                showToast(`Exception ${id} approved & resolved`);
-                
-                if (card) {
+                MOCK_KPIS.exception_count = _mockExceptions.length;
+                if (decision === 'approve') {
+                    MOCK_KPIS.auto_resolved = (MOCK_KPIS.auto_resolved || 0) + 1;
+                }
+
+                const auditMessage = decision === 'approve'
+                    ? `Exception ${id} APPROVED & RESOLVED`
+                    : `Exception ${id} REJECTED`;
+                addLocalAuditEntry(auditMessage);
+                showToast(decision === 'approve' ? `Exception ${id} approved & resolved` : `Exception ${id} rejected`);
+
+                if (card && typeof window.gsap?.to === 'function') {
                     gsap.to(card, {
                         opacity: 0,
                         y: -10,
                         duration: 0.25,
                         onComplete: async () => {
-                            await loadExceptions();
-                            await loadKPIs();
+                            await Promise.all([loadExceptions(), loadKPIs(), loadHealthScore()]);
                         }
                     });
                 } else {
-                    await loadExceptions();
-                    await loadKPIs();
+                    await Promise.all([loadExceptions(), loadKPIs(), loadHealthScore()]);
                 }
-                addLocalAuditEntry(`Exception ${id} APPROVED & RESOLVED`);
-            } catch(e) {
-                console.error('Approval failed:', e);
+            } catch (e) {
+                console.error(`Exception ${id} ${decision} failed:`, e);
                 if (btn) {
-                    btn.innerHTML = originalContent;
                     btn.disabled = false;
+                    btn.innerHTML = actionText;
+                    btn.parentElement?.querySelectorAll('button').forEach(button => { button.disabled = false; });
                 }
-                showToast(`Approval failed: ${e.message || 'Database error'}`);
+                showToast(`Could not ${decision} exception ${id}. Please try again.`, 'error');
             }
         }
 
-        async function rejectException(id, btn) {
-            const card = btn ? btn.closest('.bg-ocean-bg') : document.getElementById(`exc-card-${id}`);
-            const originalContent = btn ? btn.innerHTML : '';
-            if (btn) {
-                btn.innerHTML = '<span class="animate-pulse">Rejecting…</span>';
-                btn.disabled = true;
-            }
-            try {
-                await apiPost(`/api/exceptions/${id}/reject`, { note: 'Rejected by Controller' });
-                _mockExceptions = _mockExceptions.filter(e => e.id !== id);
-                MOCK_KPIS.exception_count = Math.max(0, _mockExceptions.length);
-                showToast(`Exception ${id} rejected`);
-                
-                if (card) {
-                    gsap.to(card, {
-                        opacity: 0,
-                        y: -10,
-                        duration: 0.25,
-                        onComplete: async () => {
-                            await loadExceptions();
-                            await loadKPIs();
-                        }
-                    });
-                } else {
-                    await loadExceptions();
-                    await loadKPIs();
-                }
-                addLocalAuditEntry(`Exception ${id} REJECTED`);
-            } catch(e) {
-                console.error('Rejection failed:', e);
-                if (btn) {
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                }
-                showToast(`Rejection failed: ${e.message || 'Database error'}`);
-            }
+        function approveException(id, btn) {
+            return resolveException(id, btn, 'approve');
         }
+
+        function rejectException(id, btn) {
+            return resolveException(id, btn, 'reject');
+        }
+
 
         async function loadAnomalies() {
             try {
@@ -1130,6 +1140,7 @@
         async function loadAuditLog() {
             try {
                 const data = await apiGet('/api/audit-log?limit=20');
+                _auditLog = Array.isArray(data) ? data : [];
                 const container = document.getElementById('auditTrailContainer');
                 container.innerHTML = '';
                 data.forEach(entry => {
@@ -1289,19 +1300,91 @@
             container.prepend(div);
         }
 
-        function exportReconciliationData() {
-            if (!_allRecords.length) { alert('No records loaded yet. Run reconciliation first.'); return; }
-            const csv = ['ID,Date,Source,Description,Amount,MatchedRecord,Status,Confidence',
-                ..._allRecords.map(r => `${r.id},${r.date},${r.source},"${r.description}",${r.amount},${r.matched_record},${r.status},${r.confidence}`)
-            ].join('\n');
-            const a = document.createElement('a');
-            a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-            a.download = `reconciliation_${new Date().toISOString().slice(0,10)}.csv`;
-            a.click();
-            addLocalAuditEntry('Exported reconciliation data as CSV.');
+        function csvCell(value) {
+            const text = value === null || value === undefined
+                ? ''
+                : typeof value === 'object'
+                    ? JSON.stringify(value)
+                    : String(value);
+            return `"${text.replace(/"/g, '""')}"`;
         }
 
-        function exportAuditLog() { loadAuditLog(); addLocalAuditEntry('Refreshed audit log.'); }
+        function downloadCsv(filename, rows) {
+            if (!rows.length) return false;
+            const csv = rows.map(row => row.map(csvCell).join(',')).join('\r\n');
+            const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = filename;
+            anchor.style.display = 'none';
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+            return true;
+        }
+
+        function exportReconciliationData() {
+            const records = Array.isArray(_allRecords) ? _allRecords : [];
+            if (!records.length) {
+                showToast('No reconciliation records are available to export.', 'error');
+                return;
+            }
+
+            const rows = [
+                ['ID', 'Date', 'Source', 'Description', 'Amount', 'Matched Record', 'Status', 'Confidence', 'Match Reason'],
+                ...records.map(record => [
+                    record.id,
+                    record.date,
+                    record.source,
+                    record.description,
+                    record.amount,
+                    record.matched_record,
+                    record.status,
+                    record.confidence,
+                    record.match_reason,
+                ]),
+            ];
+            const filename = `reconciliation_${new Date().toISOString().slice(0, 10)}.csv`;
+            if (downloadCsv(filename, rows)) {
+                addLocalAuditEntry(`Downloaded ${records.length} reconciliation records as CSV.`);
+                showToast(`Downloaded ${records.length} reconciliation records.`);
+            }
+        }
+
+        async function exportAuditLog() {
+            try {
+                const data = await apiGet('/api/audit-log?limit=1000');
+                const entries = Array.isArray(data) && data.length ? data : _auditLog;
+                if (!entries.length) {
+                    showToast('No audit entries are available to download.', 'error');
+                    return;
+                }
+
+                _auditLog = entries;
+                const rows = [
+                    ['ID', 'Actor', 'Action', 'Entity Type', 'Entity ID', 'Detail', 'Created At'],
+                    ...entries.map(entry => [
+                        entry.id,
+                        entry.actor,
+                        entry.action,
+                        entry.entity_type,
+                        entry.entity_id,
+                        entry.detail,
+                        entry.created_at,
+                    ]),
+                ];
+                const filename = `audit_log_${new Date().toISOString().slice(0, 10)}.csv`;
+                if (downloadCsv(filename, rows)) {
+                    addLocalAuditEntry(`Downloaded ${entries.length} audit log entries as CSV.`);
+                    showToast(`Downloaded ${entries.length} audit log entries.`);
+                }
+            } catch (e) {
+                console.error('Audit log download failed:', e);
+                showToast('Could not download the audit log. Please try again.', 'error');
+            }
+        }
 
         function openAICommandCenter() { document.getElementById('aiCommandModal').classList.remove('hidden'); }
         function closeAICommandCenter() { document.getElementById('aiCommandModal').classList.add('hidden'); }
@@ -1352,15 +1435,10 @@
         }
         function handleTimeTravel(val) {
             const states = ['Past 30 Days', 'TODAY', 'Next 7 Days', 'Next 30 Days'];
-            const keys = ['past_30', 'today', 'next_7', 'next_30'];
-            const idx = parseInt(val) || 0;
-            _activeTimeWindow = keys[idx] || 'all';
-            const lbl = document.getElementById('timeTravelLabel');
-            if (lbl) lbl.textContent = `State: ${states[idx]}`;
-            filterRecords();
-            addLocalAuditEntry(`Time travel view: ${states[idx]}`);
+            document.getElementById('timeTravelLabel').textContent = `State: ${states[val]}`;
+            addLocalAuditEntry(`Time travel view: ${states[val]}`);
         }
-        function openOnboardingTour() { alert('AI FINANCE CONTROLLER OS TOUR\n\n1. Real Data Ingestion → Connects Bank, ERP, and Gateway streams\n2. AI Reconciliation Engine → Multi-pass exact and fuzzy matching with composite confidence scoring\n3. Priority Exception Command Center → Review, approve, and reject unallocated items with full audit trail\n4. Cash Forecast & What-If Simulator → Dynamic liquidity modeling with real backend recomputation\n5. Immutable Audit Trail → Every transaction, decision, and anomaly is permanently recorded'); }
+        function openOnboardingTour() { alert('FINANCER OS TOUR\n\n1. Sign in → dashboard loads real data from API\n2. Click "Run AI Reconciliation" → engine matches bank/ERP/gateway records\n3. Review exceptions → approve/reject with controller role\n4. Move what-if sliders → forecast recomputes server-side\n5. Check audit log → every action is immutably logged'); }
 
         // ── Keyboard shortcuts ────────────────────────────────────────────
         document.addEventListener('keydown', e => {
@@ -1391,9 +1469,10 @@
         // ════════════════════════════════════════════════════════════════════
         function initElasticMesh(targetContainerId, options = {}) {
             const container = document.getElementById(targetContainerId);
-            if (!container || !window.OGL) return;
+            if (!container || !window.ElasticMeshOGL) return;
+            const OGL = window.ElasticMeshOGL;
             const isMobile = window.innerWidth <= 768;
-            const { color1='#00F0FF', color2='#050B14', highlight='#ffffff', showGrid=true, gridDensity=22, gridOpacity=0.35, gridColor='#00F0FF', borderRadius=25, stiffness=0.05, damping=0.2, grabRadius=0.6, pull=0.4, wobble=5, tilt=14, shading=0.5, resolution=isMobile?12:25, interaction=isMobile?'none':'hover', enabled=!prefersReducedMotion } = options;
+            const { color1='#00F0FF', color2='#050B14', highlight='#ffffff', showGrid=true, gridDensity=22, gridOpacity=0.35, gridColor='#00F0FF', borderRadius=25, stiffness=0.05, damping=0.2, grabRadius=0.6, pull=0.4, wobble=5, tilt=14, shading=0.5, resolution=isMobile?12:25, interaction=isMobile?'none':'hover', enabled=!prefersReducedMotion, fps=30, paused=false } = options;
             const DIST=4.6, FIT=0.82;
             const VERT=`precision highp float;attribute vec2 aGrid;attribute vec2 uv;attribute vec3 aOffset;attribute vec3 aNormal;uniform float uAspect;uniform float uTilt;uniform float uDist;uniform float uFit;varying vec2 vUv;varying vec3 vNormal;varying float vDepth;void main(){vUv=uv;vec2 base=vec2((aGrid.x*2.0-1.0)*uAspect,1.0-aGrid.y*2.0);vec3 p=vec3(base+aOffset.xy,aOffset.z);float ct=cos(uTilt);float st=sin(uTilt);float ry=p.y*ct-p.z*st;float rz=p.y*st+p.z*ct;p.y=ry;p.z=rz;float persp=uDist/(uDist-p.z);vec2 clip=vec2(p.x/uAspect,p.y)*persp*uFit;vNormal=aNormal;vDepth=aOffset.z;gl_Position=vec4(clip,0.0,1.0);}`;
             const FRAG=`precision highp float;varying vec2 vUv;varying vec3 vNormal;varying float vDepth;uniform vec3 uColor1;uniform vec3 uColor2;uniform vec3 uHighlight;uniform float uShading;uniform vec2 uRes;uniform float uRadius;uniform float uGrid;uniform float uGridDensity;uniform float uGridOpacity;uniform vec3 uGridColor;void main(){vec3 base=mix(uColor1,uColor2,clamp(vUv.y,0.0,1.0));vec3 N=normalize(vNormal);vec3 L=normalize(vec3(-0.35,0.55,0.78));vec3 V=vec3(0.0,0.0,1.0);vec3 H=normalize(L+V);float diff=clamp(dot(N,L),0.0,1.0);float specRaw=pow(clamp(dot(N,H),0.0,1.0),26.0);float specFlat=pow(clamp(H.z,0.0,1.0),26.0);float spec=clamp((specRaw-specFlat)/(1.0-specFlat),0.0,1.0);float ao=clamp(1.0+vDepth*0.45,0.65,1.25);vec3 lit=base*(1.0-uShading*0.28);lit+=base*diff*uShading*0.55;lit*=ao;lit+=uHighlight*spec*uShading*0.25;if(uGrid>0.5){vec2 g=vUv*uGridDensity;vec2 w=uGridDensity/max(uRes,vec2(1.0));vec2 d=abs(fract(g-0.5)-0.5)/max(w*1.5,vec2(1e-4));float line=1.0-clamp(min(d.x,d.y),0.0,1.0);lit=mix(lit,uGridColor,line*uGridOpacity*(0.45+diff*0.55));}vec2 p=(vUv-0.5)*uRes;vec2 halfRes=uRes*0.5;float r=min(uRadius,min(halfRes.x,halfRes.y));vec2 q=abs(p)-(halfRes-r);float sd=length(max(q,0.0))+min(max(q.x,q.y),0.0)-r;float alpha=1.0-smoothstep(-1.25,1.25,sd);if(alpha<=0.002)discard;gl_FragColor=vec4(lit,alpha);}`;
@@ -1412,10 +1491,10 @@
             const pointer={x:0,y:0,tx:0,ty:0,active:false,targetActive:false};
             function toPlane(cx,cy){const rect=container.getBoundingClientRect();const mx=(cx-rect.left)/rect.width,my=(cy-rect.top)/rect.height;const clipX=mx*2-1,clipY=1-my*2;const tRad=(tilt*Math.PI)/180,ct=Math.cos(tRad),st=Math.sin(tRad);const a=clipY/(ct*FIT*DIST);const py=(a*DIST)/(1+a*st);const persp=DIST/(DIST-py*st);pointer.tx=(clipX*aspect)/(persp*FIT);pointer.ty=py;}
             if(interaction!=='none'&&enabled){window.addEventListener('mousemove',e=>{toPlane(e.clientX,e.clientY);if(interaction==='hover')pointer.targetActive=true;});container.addEventListener('mouseenter',()=>{if(interaction==='hover')pointer.targetActive=true;});container.addEventListener('mouseleave',()=>{pointer.targetActive=false;});}
-            const STEP=1/120,MAX_SUB=5;let accTime=0,last=performance.now();
+            const STEP=1/120,MAX_SUB=5;let accTime=0,last=performance.now(),lastRender=0;const frameInterval=1000/Math.min(Math.max(Number(fps)||30,1),60);
             function substep(){const s=stiffness,retain=1-damping,coupling=0.06+wobble*0.032;const active=pointer.active&&enabled;const r=Math.max(0.08,grabRadius)*1.4,invR=1/r,force=pull*0.009;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const idx=j*N+i,o3=idx*3;const ox=pos[o3],oy=pos[o3+1],oz=pos[o3+2];let ax=-s*ox,ay=-s*oy,az=-s*oz;let sumx=0,sumy=0,sumz=0,cnt=0;if(i>0){const n=(idx-1)*3;sumx+=pos[n];sumy+=pos[n+1];sumz+=pos[n+2];cnt++;}if(i<N-1){const n=(idx+1)*3;sumx+=pos[n];sumy+=pos[n+1];sumz+=pos[n+2];cnt++;}if(j>0){const n=(idx-N)*3;sumx+=pos[n];sumy+=pos[n+1];sumz+=pos[n+2];cnt++;}if(j<N-1){const n=(idx+N)*3;sumx+=pos[n];sumy+=pos[n+1];sumz+=pos[n+2];cnt++;}ax+=coupling*(sumx-cnt*ox);ay+=coupling*(sumy-cnt*oy);az+=coupling*(sumz-cnt*oz);if(active){const dx=pointer.x-(baseX[idx]+ox);const dy=pointer.y-(baseY[idx]+oy);const d=Math.sqrt(dx*dx+dy*dy);const tnorm=d*invR;if(tnorm<1){const zBump=1-tnorm*tnorm;az+=force*zBump*zBump*6.0;if(d>1e-4){const pinch=tnorm*(1-tnorm)*(1-tnorm)*6.75;const dir=(force*pinch*1.6)/d;ax+=dx*dir;ay+=dy*dir;}}}accel[o3]=ax;accel[o3+1]=ay;accel[o3+2]=az;}for(let k=0;k<nodeCount;k++){const o3=k*3;vel[o3]=(vel[o3]+accel[o3])*retain;vel[o3+1]=(vel[o3+1]+accel[o3+1])*retain;vel[o3+2]=(vel[o3+2]+accel[o3+2])*retain;pos[o3]+=vel[o3];pos[o3+1]+=vel[o3+1];pos[o3+2]+=vel[o3+2];}}
             function commit(){for(let j=0;j<N;j++)for(let i=0;i<N;i++){const idx=j*N+i,o3=idx*3;const iL=i>0?idx-1:idx,iR=i<N-1?idx+1:idx,iD=j>0?idx-N:idx,iU=j<N-1?idx+N:idx;const lx=baseX[iL]+pos[iL*3],ly=baseY[iL]+pos[iL*3+1],lz=pos[iL*3+2];const rx=baseX[iR]+pos[iR*3],ry=baseY[iR]+pos[iR*3+1],rz=pos[iR*3+2];const dx=baseX[iD]+pos[iD*3],dy=baseY[iD]+pos[iD*3+1],dz=pos[iD*3+2];const ux=baseX[iU]+pos[iU*3],uy=baseY[iU]+pos[iU*3+1],uz=pos[iU*3+2];const txx=rx-lx,txy=ry-ly,txz=rz-lz,tyx=ux-dx,tyy=uy-dy,tyz=uz-dz;let nx=txy*tyz-txz*tyy,ny=txz*tyx-txx*tyz,nz=txx*tyy-txy*tyx;if(nz<0){nx=-nx;ny=-ny;nz=-nz;}const len=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;aNormal[o3]=nx/len;aNormal[o3+1]=ny/len;aNormal[o3+2]=nz/len;aOffset[o3]=pos[o3];aOffset[o3+1]=pos[o3+1];aOffset[o3+2]=pos[o3+2];}geometry.attributes.aOffset.needsUpdate=true;geometry.attributes.aNormal.needsUpdate=true;}
-            function frame(now){requestAnimationFrame(frame);let dt=(now-last)/1000;last=now;if(dt>0.25)dt=0.25;const kLerp=1-Math.exp(-Math.max(dt,1e-4)/0.06);pointer.x+=(pointer.tx-pointer.x)*kLerp;pointer.y+=(pointer.ty-pointer.y)*kLerp;pointer.active=pointer.targetActive;accTime+=dt;let sub=0;while(accTime>=STEP&&sub<MAX_SUB){substep();accTime-=STEP;sub++;}if(accTime>STEP)accTime=0;commit();renderer.render({scene:mesh});}
+            function frame(now){requestAnimationFrame(frame);if(now-lastRender<frameInterval-0.5)return;let dt=(now-last)/1000;last=now;lastRender=now;if(dt>0.25)dt=0.25;const kLerp=1-Math.exp(-Math.max(dt,1e-4)/0.06);pointer.x+=(pointer.tx-pointer.x)*kLerp;pointer.y+=(pointer.ty-pointer.y)*kLerp;pointer.active=pointer.targetActive&&!paused;accTime+=dt;let sub=0;while(!paused&&!prefersReducedMotion&&accTime>=STEP&&sub<MAX_SUB){substep();accTime-=STEP;sub++;}if(accTime>STEP)accTime=0;commit();renderer.render({scene:mesh});}
             requestAnimationFrame(frame);container.appendChild(gl.canvas);
         }
 
