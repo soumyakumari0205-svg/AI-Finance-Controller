@@ -790,6 +790,7 @@
                 loadAnomalies(),
                 loadAuditLog(),
                 loadForecast('baseline'),
+                loadNotifications(),
             ]);
             lucide.createIcons();
         }
@@ -1442,7 +1443,104 @@
 
         function openShortcutsModal() { document.getElementById('shortcutsModal').classList.remove('hidden'); }
         function closeShortcutsModal() { document.getElementById('shortcutsModal').classList.add('hidden'); }
-        function toggleNotificationPanel() { document.getElementById('notifPanel').classList.toggle('hidden'); }
+
+        async function loadNotifications() {
+            const notifList = document.getElementById('notifList');
+            const notifCountLabel = document.getElementById('notifCountLabel');
+            const notifBadge = document.getElementById('notifBadge');
+            if (!notifList) return;
+
+            try {
+                const [exceptions, anomalies, audit] = await Promise.all([
+                    apiGet('/api/exceptions?status=open&limit=5').catch(() => _mockExceptions || []),
+                    apiGet('/api/anomalies?limit=5').catch(() => MOCK_ANOMALIES || []),
+                    apiGet('/api/audit-log?limit=5').catch(() => MOCK_AUDIT || [])
+                ]);
+
+                const items = [];
+
+                // 1. Exception alerts
+                (exceptions || []).slice(0, 3).forEach(exc => {
+                    items.push({
+                        title: exc.title || 'Priority Exception',
+                        detail: exc.exposure_amount ? `Exposure: ${exc.exposure_amount}` : (exc.description || ''),
+                        time: typeof exc.age_hours === 'number' ? `${exc.age_hours.toFixed(1)}h ago` : 'Just now',
+                        target: 'exceptions',
+                        icon: 'alert-triangle',
+                        color: exc.priority === 'critical' ? 'ocean-red' : 'ocean-amber'
+                    });
+                });
+
+                // 2. Anomaly alerts
+                (anomalies || []).slice(0, 2).forEach(anom => {
+                    items.push({
+                        title: `Anomaly: ${(anom.type || '').replace(/_/g, ' ').toUpperCase()}`,
+                        detail: anom.description || '',
+                        time: anom.detected_at ? new Date(anom.detected_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Active',
+                        target: 'radar',
+                        icon: 'zap',
+                        color: 'ocean-amber'
+                    });
+                });
+
+                // 3. Engine / Audit events
+                (audit || []).slice(0, 2).forEach(entry => {
+                    items.push({
+                        title: `System: ${(entry.action || '').replace(/:/g, ' ').toUpperCase()}`,
+                        detail: `${entry.entity_type || 'system'} ${entry.entity_id ? '#' + entry.entity_id.substring(0,8) : ''}`,
+                        time: entry.created_at ? new Date(entry.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Live',
+                        target: 'demo',
+                        icon: 'shield-check',
+                        color: 'ocean-accent'
+                    });
+                });
+
+                if (!items.length) {
+                    notifList.innerHTML = '<div class="p-3 bg-ocean-bg rounded-lg border border-ocean-green/30 text-center text-ocean-green text-xs font-mono">✅ All systems clear. No active alerts.</div>';
+                    if (notifCountLabel) notifCountLabel.textContent = '0 New';
+                    if (notifBadge) notifBadge.classList.add('hidden');
+                    return;
+                }
+
+                if (notifCountLabel) notifCountLabel.textContent = `${items.length} Live`;
+                if (notifBadge) notifBadge.classList.remove('hidden');
+
+                notifList.innerHTML = '';
+                items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `p-2.5 bg-ocean-bg rounded-lg border border-${item.color}/30 hover:border-${item.color} cursor-pointer transition-all space-y-1 hover:bg-ocean-card`;
+                    card.onclick = () => {
+                        scrollToSection(item.target);
+                        toggleNotificationPanel();
+                    };
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-[11px] text-${item.color} flex items-center gap-1.5">
+                                <i data-lucide="${item.icon}" class="w-3.5 h-3.5"></i>
+                                <span>${item.title}</span>
+                            </span>
+                            <span class="text-[9px] font-mono text-ocean-textMuted">${item.time}</span>
+                        </div>
+                        <p class="text-[10px] text-ocean-textMuted line-clamp-2">${item.detail}</p>
+                    `;
+                    notifList.appendChild(card);
+                });
+                lucide.createIcons();
+            } catch(e) {
+                console.error('Failed to load notifications:', e);
+                notifList.innerHTML = '<div class="p-2 bg-ocean-bg rounded text-xs text-ocean-textMuted">Notifications active.</div>';
+            }
+        }
+
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notifPanel');
+            if (panel) {
+                const isHidden = panel.classList.toggle('hidden');
+                if (!isHidden) {
+                    loadNotifications();
+                }
+            }
+        }
         function scrollToSection(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); }
         function setMode(mode) {
             document.getElementById('modeOpBtn').className = 'px-2.5 py-1 rounded font-bold ' + (mode === 'operational' ? 'bg-ocean-accent text-ocean-bg' : 'text-ocean-textMuted hover:text-ocean-text');
@@ -1468,6 +1566,15 @@
                 if (e.key.toLowerCase() === 'r') runReconciliation();
                 if (e.key.toLowerCase() === 'e') scrollToSection('exceptions');
                 if (e.key.toLowerCase() === 'c') scrollToSection('forecasting');
+            }
+        });
+
+        // ── Click outside to close notification panel ─────────────────────
+        document.addEventListener('click', e => {
+            const notifPanel = document.getElementById('notifPanel');
+            const notifBtn = e.target.closest('button[onclick*="toggleNotificationPanel"]');
+            if (notifPanel && !notifPanel.classList.contains('hidden') && !notifPanel.contains(e.target) && !notifBtn) {
+                notifPanel.classList.add('hidden');
             }
         });
 
